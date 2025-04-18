@@ -1,3 +1,6 @@
-.vscode
-a.out
+game
+.textures
+textures/
+super-croc-boy
 main
+.vscode/
