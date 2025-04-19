@@ -1,83 +1,106 @@
 #pragma once
+#include "GLFW/glfw3.h"
+#include "glad.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "glad.h"
-#include "GLFW/glfw3.h"
 
-typedef struct Shader{
- int id;
+typedef struct Shader {
+  int id;
 } Shader;
 
+char *readFile(FILE *f) {
 
-Shader createShader(char *filePath){
-    char* fileWi = malloc(strlen(filePath));
-   strcpy(fileWi,filePath);
-   strcat(fileWi,"vertex.vs");
-   
-   
-   FILE *file = fopen(fileWi,"r");
-   if(file == NULL){
-    printf("ERROR: Cannot open shader FILE!\n");
-   }
+   fseek(f, 0, SEEK_END);
+    long length = ftell(f);
+    rewind(f);
 
-    fseek(file,0,SEEK_END);
-    int end = ftell(file);
-    rewind(file);
+    char *result = malloc(length + 1);  // +1 for null terminator
+    if (!result) {
+        printf("ERROR: malloc failed\n");
+        exit(1);
+    }
 
-    char  *source = (char*)malloc(end+1);
-    if(source == NULL)printf("ERROR: Cannot allocate memory for shader source!\n");
+    size_t readSize = fread(result, 1, length, f);
+    result[readSize] = '\0';
 
+    return result;
+}
 
-    fread(source,1,end,file);
-    
-    source[end] = '\0';
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader,1,(const char**)&source,NULL);
-    glCompileShader(vertexShader);
-  int success;
-  char infoLog[512];
+Shader createShader(char *filePath) {
+  char *fullPathFs = malloc(strlen(filePath) + strlen("fragment.fs"));
+  fullPathFs[0] = '\0';
+  char *fullPathVs = malloc(strlen(filePath) + strlen("vertex.vs"));
+  fullPathVs[0] = '\0';
+  strcat(fullPathFs, filePath);
+  strcat(fullPathFs, "fragment.fs");
+  strcat(fullPathVs, filePath);
+  strcat(fullPathVs, "vertex.vs");
+  printf("[INFO]: fragment shader file path %s\n", fullPathFs);
+  printf("[INFO]: vertex shader file path %s\n", fullPathVs);
 
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    printf("%s \n", infoLog);
+  FILE *fragment = fopen(fullPathFs, "r");
+  if (fragment == NULL) {
+    printf("ERROR: Cannot open fragment file\n");
+    exit(-1);
   }
-    fclose(file);
-    printf("INF: File closed!\n");
-    memset(&fileWi,0,sizeof(fileWi));
-    fileWi = strcat(filePath,"fragment.fs");
-    
-    file = fopen(fileWi,"r");
-     
-     if(file ==NULL) printf("ERROR: Cannot open file!\n");
-    fseek(file,0,SEEK_END);
+  char* fragmentSource = readFile(fragment);
 
-    end = ftell(file);
-    rewind(file);
-    source = (char*)malloc(end+1);
+  printf("[INFO] fragment source\n %s\n", fragmentSource);
 
-    fread(source,1,end,file);
+  fclose(fragment);
+   free(fullPathFs);
 
-    source[end] = '\0';
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader,1,(const char**)&source,NULL);
-    glCompileShader(fragmentShader);
-glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    printf("%s \n", infoLog);
+  FILE *vertex = fopen(fullPathVs, "r");
+  if (vertex == NULL) {
+    printf("ERROR: Cannot open vertex file\n");
+    exit(-1);
   }
-    Shader shader = {0};
-    shader.id = glCreateProgram();
-    glAttachShader(shader.id,vertexShader);
-    glAttachShader(shader.id,fragmentShader);
-    glLinkProgram(shader.id);
 
-    
-glDeleteShader(vertexShader);
-glDeleteShader(fragmentShader);
-    free(source);
-    fclose(file);
+   char* vertexSource = readFile(vertex);
+
+  printf("[INFO] vertex source\n %s\n", vertexSource);
+  fclose(vertex);
+   free(fullPathVs);
+
+   unsigned int vertexId,fragmentId;
+   int success;
+   char infoLog[512];
+   
+   vertexId = glCreateShader(GL_VERTEX_SHADER);
+   glShaderSource(vertexId,1,(const char**)&vertexSource,NULL);
+   glCompileShader(vertexId);
+    glGetShaderiv(vertexId,GL_COMPILE_STATUS,&success);
+    if(!success){
+      glGetShaderInfoLog(vertexId,512,NULL,infoLog);
+      printf("ERROR: %s\n",infoLog);
+    }
+
+    fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentId,1,(const char**)&fragmentSource,NULL);
+    glCompileShader(fragmentId);
+    success = 0;
+    glGetShaderiv(fragmentId,GL_COMPILE_STATUS,&success);
+    if(!success)
+{
+  glGetShaderInfoLog(fragmentId,512,NULL,infoLog);
+
+      printf("ERROR: %s\n",infoLog);
+}
+
+Shader shader = {0};
+shader.id = glCreateProgram();
+glAttachShader(shader.id,vertexId);
+glAttachShader(shader.id,fragmentId);
+glLinkProgram(shader.id);
+
+glGetProgramiv(shader.id,GL_LINK_STATUS,&success);
+if(!success){
+  glGetProgramInfoLog(shader.id,512,NULL,infoLog);
+  printf("ERROR: Linking program %s\n",infoLog);
+}
+glDeleteShader(vertexId);
+glDeleteShader(fragmentId);
+
   return shader;
 }
