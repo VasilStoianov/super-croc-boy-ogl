@@ -1,6 +1,6 @@
 #pragma once
-#include "GLFW/glfw3.h"
 #include "glad.h"
+#include "GLFW/glfw3.h"
 #include "math/vector.h"
 #include "stdio.h"
 #include "stdlib.h"

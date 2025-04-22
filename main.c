@@ -6,15 +6,19 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "game.h"
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mods);
+
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
-const float dt = 1.0 / 60.f;
+ float dt = 1.0 / 60.f;
 bool keys[1024];
 Player *player;
+
 int main(void) {
 
   glfwInit();
@@ -48,34 +52,22 @@ int main(void) {
 
   // load vbo
   unsigned int VBO, VAO, EBO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
-  // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
-  // then configure vertex attributes(s).
-  glBindVertexArray(VAO);
+  configVertices(VBO,VAO,EBO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  // safely unbind
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  glBindVertexArray(0);
   player = createPlayer();
+  
   glfwSetKeyCallback(window, key_callback);
 
-  // uncomment this call to draw in wireframe polygons.
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+double time = glfwGetTime();
+double lastFrame = time;
+ 
+   dt = time - lastFrame;
+   lastFrame = time;
 
-  // render loop
+
+// render loop
   while (!glfwWindowShouldClose(window)) {
+    time  = glfwGetTime();
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -86,6 +78,10 @@ int main(void) {
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+   dt = time - lastFrame;
+   lastFrame = time;
+
   }
 
   glfwTerminate();
@@ -98,7 +94,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mods) {
-  printf("%f\n", dt);
   if (key >= 0 && key < 1024) {
     if (action == GLFW_PRESS) {
       keys[key] = true;
@@ -114,13 +109,13 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, 1);
   }
   if (keys[GLFW_KEY_RIGHT]) {
-    updatePlayerVelocity(player, 15.1f * dt, RIGHT);
+    updatePlayerVelocity(player, 5.1f * dt, RIGHT,dt);
     return;
   }
 
   if (keys[GLFW_KEY_LEFT]) {
-    updatePlayerVelocity(player, -15.1f * dt, LEFT);
+    updatePlayerVelocity(player, -5.1f * dt, LEFT,dt);
     return;
   }
-  updatePlayerVelocity(player, 0.f, STOP);
+  updatePlayerVelocity(player, 0.f, STOP,dt);
 }
