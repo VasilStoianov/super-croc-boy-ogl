@@ -18,12 +18,9 @@ void updatePlayerVelocity(Player *player, float updateValue, Direction dir,float
   switch (dir) {
   case RIGHT: {
     player->velocity.x += updateValue;
-    printf("%f %f\n",dt,player->velocity.x);
     break;
   }
   case LEFT: {
-
-    printf("%f %f\n",dt,player->velocity.x);
     player->velocity.x += updateValue;
     break;
   }
@@ -49,8 +46,8 @@ Player *createPlayer() {
 
 void updatePlayer(Player *player, unsigned int prograId, float dt) {
 
-  player->position.x += player->velocity.x * dt;
-  player->position.y += player->velocity.y * dt;
+  player->position.x += player->velocity.x*dt;
+  player->position.y += player->velocity.y*dt;
   setVecUniform(player->position, prograId);
 }
 

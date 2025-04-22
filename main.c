@@ -1,3 +1,4 @@
+#include "game.h"
 #include "glad.h"
 #include "player.h"
 #include "shader.h"
@@ -6,7 +7,6 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "game.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -15,7 +15,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
- float dt = 1.0 / 60.f;
+float dt = 1.0 / 60.f;
 bool keys[1024];
 Player *player;
 
@@ -52,36 +52,37 @@ int main(void) {
 
   // load vbo
   unsigned int VBO, VAO, EBO;
-  configVertices(VBO,VAO,EBO);
+  configVertices(VBO, VAO, EBO);
 
   player = createPlayer();
-  
+
   glfwSetKeyCallback(window, key_callback);
 
-double time = glfwGetTime();
-double lastFrame = time;
- 
-   dt = time - lastFrame;
-   lastFrame = time;
+  double time = glfwGetTime();
+  double lastFrame = time;
+  printf("%f %f \n",dt,lastFrame);
 
-
-// render loop
+  // render loop
   while (!glfwWindowShouldClose(window)) {
-    time  = glfwGetTime();
+    time = glfwGetTime();
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    updatePlayer(player, shader.id, dt);
     glUseProgram(shader.id);
     glBindVertexArray(VAO);
-    updatePlayer(player, shader.id, dt);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
 
-   dt = time - lastFrame;
-   lastFrame = time;
-
+    dt = time - lastFrame;
+    if(dt<0.01){
+        dt = 1.f/60.f;
+    } 
+       printf("dt : %f\n",dt);
+    lastFrame = time;
   }
 
   glfwTerminate();
@@ -109,13 +110,13 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, 1);
   }
   if (keys[GLFW_KEY_RIGHT]) {
-    updatePlayerVelocity(player, 5.1f * dt, RIGHT,dt);
+    updatePlayerVelocity(player, 1.f, RIGHT, dt);
     return;
   }
 
   if (keys[GLFW_KEY_LEFT]) {
-    updatePlayerVelocity(player, -5.1f * dt, LEFT,dt);
+    updatePlayerVelocity(player, -1.f, LEFT, dt);
     return;
   }
-  updatePlayerVelocity(player, 0.f, STOP,dt);
+  updatePlayerVelocity(player, 0.f, STOP, dt);
 }

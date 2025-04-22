@@ -10,7 +10,7 @@ typedef struct vector {
 vector createZeroVector() {
   vector res = {0};
   res.x = 0.f;
-  res.y = 1.f;
+  res.y = 0.f;
 
   return res;
 }
