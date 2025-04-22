@@ -1,15 +1,20 @@
 #include "glad.h"
+#include "player.h"
 #include "shader.h"
+#include "stdbool.h"
 #include "vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mods);
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
-
+const float dt = 1.0 / 60.f;
+bool keys[1024];
+Player *player;
 int main(void) {
 
   glfwInit();
@@ -42,29 +47,29 @@ int main(void) {
   Shader shader = createShader(filePath);
 
   // load vbo
-  unsigned int VBO, VAO;
+  unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
+  glGenBuffers(1, &EBO);
   // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
   // then configure vertex attributes(s).
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  // note that this is allowed, the call to glVertexAttribPointer registered VBO
-  // as the vertex attribute's bound vertex buffer object so afterwards we can
   // safely unbind
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  // You can unbind the VAO afterwards so other VAO calls won't accidentally
-  // modify this VAO, but this rarely happens. Modifying other VAOs requires a
-  // call to glBindVertexArray anyways so we generally don't unbind VAOs (nor
-  // VBOs) when it's not directly necessary.
   glBindVertexArray(0);
+  player = createPlayer();
+  glfwSetKeyCallback(window, key_callback);
 
   // uncomment this call to draw in wireframe polygons.
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -76,7 +81,9 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shader.id);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    updatePlayer(player, shader.id, dt);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -86,13 +93,34 @@ int main(void) {
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  // make sure the viewport matches the new window dimensions; note that width
-  // and height will be significantly larger than specified on retina displays.
   glViewport(0, 0, width, height);
 }
 
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mods) {
+  printf("%f\n", dt);
+  if (key >= 0 && key < 1024) {
+    if (action == GLFW_PRESS) {
+      keys[key] = true;
+    } else if (action == GLFW_RELEASE) {
+      keys[key] = false;
+    }
+  }
+}
+
 void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+
+  if (keys[GLFW_KEY_ESCAPE]) {
     glfwSetWindowShouldClose(window, 1);
   }
+  if (keys[GLFW_KEY_RIGHT]) {
+    updatePlayerVelocity(player, 15.1f * dt, RIGHT);
+    return;
+  }
+
+  if (keys[GLFW_KEY_LEFT]) {
+    updatePlayerVelocity(player, -15.1f * dt, LEFT);
+    return;
+  }
+  updatePlayerVelocity(player, 0.f, STOP);
 }

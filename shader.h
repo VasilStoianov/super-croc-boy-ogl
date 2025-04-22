@@ -1,6 +1,7 @@
 #pragma once
 #include "GLFW/glfw3.h"
 #include "glad.h"
+#include "math/vector.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -11,20 +12,20 @@ typedef struct Shader {
 
 char *readFile(FILE *f) {
 
-   fseek(f, 0, SEEK_END);
-    long length = ftell(f);
-    rewind(f);
+  fseek(f, 0, SEEK_END);
+  long length = ftell(f);
+  rewind(f);
 
-    char *result = malloc(length + 1);  // +1 for null terminator
-    if (!result) {
-        printf("ERROR: malloc failed\n");
-        exit(1);
-    }
+  char *result = malloc(length + 1); // +1 for null terminator
+  if (!result) {
+    printf("ERROR: malloc failed\n");
+    exit(1);
+  }
 
-    size_t readSize = fread(result, 1, length, f);
-    result[readSize] = '\0';
+  size_t readSize = fread(result, 1, length, f);
+  result[readSize] = '\0';
 
-    return result;
+  return result;
 }
 
 Shader createShader(char *filePath) {
@@ -44,12 +45,10 @@ Shader createShader(char *filePath) {
     printf("ERROR: Cannot open fragment file\n");
     exit(-1);
   }
-  char* fragmentSource = readFile(fragment);
-
-  printf("[INFO] fragment source\n %s\n", fragmentSource);
+  char *fragmentSource = readFile(fragment);
 
   fclose(fragment);
-   free(fullPathFs);
+  free(fullPathFs);
 
   FILE *vertex = fopen(fullPathVs, "r");
   if (vertex == NULL) {
@@ -57,50 +56,55 @@ Shader createShader(char *filePath) {
     exit(-1);
   }
 
-   char* vertexSource = readFile(vertex);
+  char *vertexSource = readFile(vertex);
 
-  printf("[INFO] vertex source\n %s\n", vertexSource);
   fclose(vertex);
-   free(fullPathVs);
+  free(fullPathVs);
 
-   unsigned int vertexId,fragmentId;
-   int success;
-   char infoLog[512];
-   
-   vertexId = glCreateShader(GL_VERTEX_SHADER);
-   glShaderSource(vertexId,1,(const char**)&vertexSource,NULL);
-   glCompileShader(vertexId);
-    glGetShaderiv(vertexId,GL_COMPILE_STATUS,&success);
-    if(!success){
-      glGetShaderInfoLog(vertexId,512,NULL,infoLog);
-      printf("ERROR: %s\n",infoLog);
-    }
+  unsigned int vertexId, fragmentId;
+  int success;
+  char infoLog[512];
 
-    fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentId,1,(const char**)&fragmentSource,NULL);
-    glCompileShader(fragmentId);
-    success = 0;
-    glGetShaderiv(fragmentId,GL_COMPILE_STATUS,&success);
-    if(!success)
-{
-  glGetShaderInfoLog(fragmentId,512,NULL,infoLog);
+  vertexId = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexId, 1, (const char **)&vertexSource, NULL);
+  glCompileShader(vertexId);
+  glGetShaderiv(vertexId, GL_COMPILE_STATUS, &success);
 
-      printf("ERROR: %s\n",infoLog);
-}
+  if (!success) {
+    glGetShaderInfoLog(vertexId, 512, NULL, infoLog);
+    printf("ERROR: %s\n", infoLog);
+  }
 
-Shader shader = {0};
-shader.id = glCreateProgram();
-glAttachShader(shader.id,vertexId);
-glAttachShader(shader.id,fragmentId);
-glLinkProgram(shader.id);
+  fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentId, 1, (const char **)&fragmentSource, NULL);
+  glCompileShader(fragmentId);
+  success = 0;
+  glGetShaderiv(fragmentId, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(fragmentId, 512, NULL, infoLog);
 
-glGetProgramiv(shader.id,GL_LINK_STATUS,&success);
-if(!success){
-  glGetProgramInfoLog(shader.id,512,NULL,infoLog);
-  printf("ERROR: Linking program %s\n",infoLog);
-}
-glDeleteShader(vertexId);
-glDeleteShader(fragmentId);
+    printf("ERROR: %s\n", infoLog);
+  }
+
+  Shader shader = {0};
+  shader.id = glCreateProgram();
+  glAttachShader(shader.id, vertexId);
+  glAttachShader(shader.id, fragmentId);
+  glLinkProgram(shader.id);
+
+  glGetProgramiv(shader.id, GL_LINK_STATUS, &success);
+  if (!success) {
+    glGetProgramInfoLog(shader.id, 512, NULL, infoLog);
+  }
+  glDeleteShader(vertexId);
+  glDeleteShader(fragmentId);
+  free(fragmentSource);
+  free(vertexSource);
 
   return shader;
+}
+
+void setVecUniform(vector pos, unsigned int shaderId) {
+  GLint location = glGetUniformLocation(shaderId, "pPos");
+  glUniform3f(location, pos.x, pos.y, pos.z);
 }
