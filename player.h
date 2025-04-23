@@ -10,6 +10,8 @@ typedef struct Player {
 
   vector position;
   vector velocity;
+  float maxSpeedX;
+  float maxSpeedY;
 
 } Player;
 
@@ -18,11 +20,35 @@ void updatePlayerVelocity(Player *player, float updateValue, Direction dir,float
   switch (dir) {
   case RIGHT: {
     player->velocity.x += updateValue;
+    if(player->velocity.x > player->maxSpeedX){
+        player->velocity.x = player->maxSpeedX;
+    }
     break;
   }
   case LEFT: {
+  
     player->velocity.x += updateValue;
+    if(player->velocity.x < -player->maxSpeedX){
+        player->velocity.x = -player->maxSpeedX;
+    }
     break;
+  }
+  case UP: {
+        player->velocity.y += updateValue;
+    if(player->velocity.y > player->maxSpeedY){
+        player->velocity.y = player->maxSpeedY;
+    }
+    break;
+ 
+  }
+
+  case DOWN:{
+    player->velocity.y += updateValue;
+    if(player->velocity.y < -player->maxSpeedY){
+        player->velocity.y = -player->maxSpeedY;
+    }
+    break;
+ 
   }
   case STOP: {
     player->velocity.y = 0.f;
@@ -40,6 +66,8 @@ Player *createPlayer() {
 
   p->velocity = createZeroVector();
   p->position = createZeroVector();
+  p->maxSpeedX =1.f;
+  p->maxSpeedY =1.f;
 
   return p;
 }

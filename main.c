@@ -17,7 +17,7 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 float dt = 1.0 / 60.f;
 bool keys[1024];
-Player *player;
+Player *player = {0};
 
 int main(void) {
 
@@ -51,16 +51,15 @@ int main(void) {
   Shader shader = createShader(filePath);
 
   // load vbo
-  unsigned int VBO, VAO, EBO;
-  configVertices(VBO, VAO, EBO);
+  unsigned int VBO=0, VAO=0,  EBO=0;
+  configVertices(&VBO, &VAO, &EBO);
 
   player = createPlayer();
 
   glfwSetKeyCallback(window, key_callback);
 
-  double time = glfwGetTime();
-  double lastFrame = time;
-  printf("%f %f \n",dt,lastFrame);
+  double time=0 ;
+  double lastFrame=0 ;
 
   // render loop
   while (!glfwWindowShouldClose(window)) {
@@ -69,8 +68,9 @@ int main(void) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    updatePlayer(player, shader.id, dt);
     glUseProgram(shader.id);
+    
+    updatePlayer(player, shader.id, dt);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -78,13 +78,13 @@ int main(void) {
     glfwPollEvents();
 
     dt = time - lastFrame;
-    if(dt<0.01){
+    if(dt<0.01 || dt>0.02){
         dt = 1.f/60.f;
     } 
        printf("dt : %f\n",dt);
     lastFrame = time;
   }
-
+  free(player);
   glfwTerminate();
   return 1;
 }
@@ -110,13 +110,17 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, 1);
   }
   if (keys[GLFW_KEY_RIGHT]) {
-    updatePlayerVelocity(player, 1.f, RIGHT, dt);
-    return;
+    updatePlayerVelocity(player, .2f, RIGHT, dt);
   }
 
   if (keys[GLFW_KEY_LEFT]) {
-    updatePlayerVelocity(player, -1.f, LEFT, dt);
-    return;
+    updatePlayerVelocity(player, -.2, LEFT, dt);
+  }
+if (keys[GLFW_KEY_UP]) {
+    updatePlayerVelocity(player, .2, UP, dt);
+  }
+if (keys[GLFW_KEY_DOWN]) {
+    updatePlayerVelocity(player, -.2, DOWN, dt);
   }
   updatePlayerVelocity(player, 0.f, STOP, dt);
 }

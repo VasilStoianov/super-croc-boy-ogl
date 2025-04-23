@@ -5,18 +5,18 @@
 #include <GLFW/glfw3.h>
 #include "vertices.h"
 
-void configVertices(unsigned int VBO,unsigned int VAO,unsigned int EBO){
+void configVertices(unsigned int *VBO,unsigned int *VAO,unsigned int *EBO){
 
-glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
+glGenVertexArrays(1, VAO);
+  glGenBuffers(1, VBO);
+  glGenBuffers(1, EBO);
   // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
   // then configure vertex attributes(s).
-  glBindVertexArray(VAO);
+  glBindVertexArray(*VAO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, *VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
 
