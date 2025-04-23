@@ -95,30 +95,27 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 void processInput(GLFWwindow *window) {
+  set_player_action(player);
 
-  if (input_key_held(GLFW_KEY_RIGHT) || input_key_pressed(GLFW_KEY_RIGHT)) {
-    updatePlayerVelocity(player, .2f, RIGHT, dt);
-  }
-  if (input_key_pressed(GLFW_KEY_ESCAPE)) {
-    glfwSetWindowShouldClose(window, 1);
-  }
-  if (input_key_held(GLFW_KEY_LEFT) || input_key_pressed(GLFW_KEY_LEFT)) {
-    updatePlayerVelocity(player, -.2f, LEFT, dt);
-  }
-  if (input_get_key_state(GLFW_KEY_RIGHT) == KEY_UP) {
-    if (!input_key_held(GLFW_KEY_LEFT) && !input_key_pressed(GLFW_KEY_LEFT))
-      updatePlayerVelocity(player, .2f, STOP, dt);
-  }
-  if (input_get_key_state(GLFW_KEY_LEFT) == KEY_UP) {
-
-    if (!input_key_held(GLFW_KEY_RIGHT) && !input_key_pressed(GLFW_KEY_RIGHT))
-      updatePlayerVelocity(player, .2f, STOP, dt);
+  if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS){
+    glfwSetWindowShouldClose(window,1);
   }
 
-  if (input_key_pressed(GLFW_KEY_UP) || input_key_pressed(GLFW_KEY_UP)) {
-
-    updatePlayerVelocity(player, .2f, UP, dt);
+  if (player->action[LEFT]) {
+    updatePlayerVelocity(player, -.2f, 0.f);
+  }
+  if(player->action[RIGHT]){
+    updatePlayerVelocity(player,.2f, 0.f);
   }
 
-
+  if(player->action[UP]){
+    updatePlayerVelocity(player, 0.f, .2f);
+  }
+if(player->action[DOWN]){
+    updatePlayerVelocity(player,0.f,-.2f);
+  }
+  if (!player->action[LEFT] && !player->action[RIGHT] && !player->action[UP] && !player->action[DOWN]) {
+    updatePlayerVelocity(player, 0.f, 0.f);
+  }
+  
 }

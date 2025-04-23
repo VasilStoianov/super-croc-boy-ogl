@@ -29,7 +29,6 @@ void input_update(){
        }
        previous[key] = current[key];
     }
-
 }
 
 int input_key_pressed(int key){
