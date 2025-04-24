@@ -19,26 +19,6 @@ typedef struct Player {
 
 } Player;
 
-void updatePlayerVelocity(Player *player, float x_vel, float y_vel) {
-
-  player->velocity.x = 0;
-  player->velocity.y = 0;
-  player->velocity.x += x_vel;
-  player->velocity.y += y_vel;
-  if (player->velocity.x > player->maxSpeedX) {
-    player->velocity.x = player->maxSpeedX;
-  }
-  if (player->velocity.x < -player->maxSpeedX) {
-    player->velocity.x = -player->maxSpeedX;
-  }
-  if (player->velocity.y > player->maxSpeedY) {
-    player->velocity.y = player->maxSpeedY;
-  }
-  if (player->velocity.y < -player->maxSpeedY) {
-    player->velocity.y = -player->maxSpeedY;
-  }
-}
-
 Player *createPlayer() {
 
   Player *p = (Player *)malloc(sizeof(Player));
