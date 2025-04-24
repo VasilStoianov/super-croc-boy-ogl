@@ -56,25 +56,19 @@ int main(void) {
 
   player = createPlayer();
 
-  // glfwSetKeyCallback(window, key_callback);
-
   double time = 0;
   double lastFrame = 0;
 
   // render loop
   while (!glfwWindowShouldClose(window)) {
     time = glfwGetTime();
-    input_update();
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shader.id);
-
     updatePlayer(player, shader.id, dt);
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+    drawPlayer(VAO, shader.id);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -82,7 +76,6 @@ int main(void) {
     if (dt < 0.01 || dt > 0.02) {
       dt = 1.f / 60.f;
     }
-    printf("dt : %f\n", dt);
     lastFrame = time;
   }
   free(player);
@@ -95,27 +88,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, 1);
+  }
+  input_update();
   set_player_action(player);
-
-  if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS){
-    glfwSetWindowShouldClose(window,1);
-  }
-
-  if (player->action[LEFT]) {
-    updatePlayerVelocity(player, -.2f, 0.f);
-  }
-  if(player->action[RIGHT]){
-    updatePlayerVelocity(player,.2f, 0.f);
-  }
-
-  if(player->action[UP]){
-    updatePlayerVelocity(player, 0.f, .2f);
-  }
-if(player->action[DOWN]){
-    updatePlayerVelocity(player,0.f,-.2f);
-  }
-  if (!player->action[LEFT] && !player->action[RIGHT] && !player->action[UP] && !player->action[DOWN]) {
-    updatePlayerVelocity(player, 0.f, 0.f);
-  }
-  
+  handlePlayerMovement(player);
 }

@@ -5,6 +5,7 @@
 #include "shader.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
+#include "input.h"
 
 typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
 
@@ -20,11 +21,10 @@ typedef struct Player {
 
 void updatePlayerVelocity(Player *player, float x_vel, float y_vel) {
 
-
+  player->velocity.x = 0;
+  player->velocity.y = 0;
   player->velocity.x += x_vel;
   player->velocity.y += y_vel;
-  if(x_vel ==0.f) player->velocity.x = 0;
-  if(y_vel == 0.f) player->velocity.y = 0;
   if (player->velocity.x > player->maxSpeedX) {
     player->velocity.x = player->maxSpeedX;
   }
