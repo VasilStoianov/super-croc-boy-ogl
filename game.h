@@ -6,6 +6,18 @@
 #include "utils.h"
 #include "vertices.h"
 #include <GLFW/glfw3.h>
+#include "level/tile.h"
+#include <stdbool.h>
+
+static const float GRAVITY  = -125.f;
+
+void applyGravity(Player *player, float dt){
+
+  if(!player->onGround)
+ {
+  player->velocity.y += GRAVITY *  dt;
+ }
+ }
 
 void configVertices(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO) {
 
@@ -65,10 +77,37 @@ void handlePlayerMovement(Player *player) {
       clamp(player->velocity.y, -player->maxSpeedY, player->maxSpeedX);
 }
 
-void drawPlayer(unsigned int VAO, unsigned int program_id) {
+void draw(unsigned int VAO, unsigned int program_id) {
   glUseProgram(program_id);
   glBindVertexArray(VAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+
+bool collision_check(Player* p, Tile* tile)
+{
+
+  return (p->position.x < tile->position.x + tile->size.x &&
+          p->position.x + p->size.x > tile->position.x &&
+          p->position.y < tile->position.y + tile->size.y &&
+          p->position.y + p->size.y > tile->position.y);
+}
+
+void player_groun_collision(Player* p, Tile* tile){
+
+ if(collision_check(p,tile)){
+  if(p->velocity.y > 0){
+    p->position.y = tile->position.y - p->size.y;
+  } else if (p->velocity.y < 0 ){
+    p->position.y = tile->position.y  + tile->size.y;
+    p->velocity.y = 0;
+    p->onGround = true;
+  }
+ } else{
+
+ p->onGround = false;
+ }
+
 }
 
 #endif

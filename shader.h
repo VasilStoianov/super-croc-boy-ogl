@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "math/matrix.h"
 
 typedef struct Shader {
   int id;
@@ -37,8 +38,8 @@ Shader createShader(char *filePath) {
   strcat(fullPathFs, "fragment.fs");
   strcat(fullPathVs, filePath);
   strcat(fullPathVs, "vertex.vs");
-  printf("[INFO]: fragment shader file path %s\n", fullPathFs);
-  printf("[INFO]: vertex shader file path %s\n", fullPathVs);
+  printf("[INFO] fragment shader file path %s\n", fullPathFs);
+  printf("[INFO] vertex shader file path %s\n", fullPathVs);
 
   FILE *fragment = fopen(fullPathFs, "r");
   if (fragment == NULL) {
@@ -104,7 +105,10 @@ Shader createShader(char *filePath) {
   return shader;
 }
 
-void setVecUniform(vector pos, unsigned int shaderId) {
-  GLint location = glGetUniformLocation(shaderId, "pPos");
-  glUniform3f(location, pos.x, pos.y, pos.z);
+void set_matrix_uniform(mat4f matrix, unsigned int shaderId) {
+  GLint location = glGetUniformLocation(shaderId, "translation");
+  glUseProgram(shaderId);
+  glUniformMatrix4fv(location,1,GL_FALSE,(const float*)&matrix.m);
+
 }
+

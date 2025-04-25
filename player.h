@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include "input.h"
+#include <stdbool.h>
+#include "math/matrix.h"
 
 typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
 
@@ -13,9 +15,12 @@ typedef struct Player {
 
   vector position;
   vector velocity;
+  vector size; 
   float maxSpeedX;
   float maxSpeedY;
+  bool onGround;
   int action[LAST_DIR];
+  mat4f translation;
 
 } Player;
 
@@ -27,6 +32,10 @@ Player *createPlayer() {
   p->position = createZeroVector();
   p->maxSpeedX = 1.f;
   p->maxSpeedY = 1.f;
+  p->translation = identity();
+  p->onGround = false;
+  p->size = (vector){.x = .75f * .25f,.y=1.f*.25f,.z=0.f};
+
 
   return p;
 }
@@ -35,9 +44,15 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
 
   player->position.x += player->velocity.x * dt;
   player->position.y += player->velocity.y * dt;
-  setVecUniform(player->position, prograId);
+
+  setTranslation(&(player->translation),player->position);
+  set_matrix_uniform(player->translation,prograId);
+
 }
 
+void scalePlayer(Player *player, vector scaleVec){
+ scaleMatrix(&(player->translation),scaleVec);
+}
 void set_player_action(Player *player) {
 
   player->action[LEFT] =
