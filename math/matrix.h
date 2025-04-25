@@ -18,9 +18,9 @@ mat4f identity(){
 
 void setTranslation(mat4f *matrix, vector vec ){
 
-    matrix->m[3][0] = vec.x;
-    matrix->m[3][1] = vec.y;
-    matrix->m[3][2] = vec.z;
+    matrix->m[0][3] = vec.x;
+    matrix->m[1][3] = vec.y;
+    matrix->m[2][3] = vec.z;
     
 }
 
@@ -29,5 +29,6 @@ void scaleMatrix(mat4f *matrix, vector scale){
     matrix->m[1][1] = scale.y;
     matrix->m[2][2] = scale.z;
 }
+
 
 #endif

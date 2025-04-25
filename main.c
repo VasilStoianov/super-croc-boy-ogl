@@ -62,6 +62,8 @@ int main(void) {
   Tile *tile = createTile();
   create_tile_matrix(&(tile->translate), tile->position);
 
+  print_matrix(tile->translate);
+
   double time = glfwGetTime();
   double lastFrame = 0;
   double lastTime = time;
