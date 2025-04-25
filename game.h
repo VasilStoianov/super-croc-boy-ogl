@@ -2,22 +2,21 @@
 #define __game__
 
 #include "glad.h"
+#include "level/tile.h"
 #include "player.h"
 #include "utils.h"
 #include "vertices.h"
 #include <GLFW/glfw3.h>
-#include "level/tile.h"
 #include <stdbool.h>
 
-static const float GRAVITY  = -125.f;
+static const float GRAVITY = -125.f;
 
-void applyGravity(Player *player, float dt){
+void applyGravity(Player *player, float dt) {
 
-  if(!player->onGround)
- {
-  player->velocity.y += GRAVITY *  dt;
- }
- }
+  if (!player->onGround) {
+    player->velocity.y += GRAVITY * dt;
+  }
+}
 
 void configVertices(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO) {
 
@@ -83,31 +82,42 @@ void draw(unsigned int VAO, unsigned int program_id) {
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
+bool collision_check(Player *p, Tile *tile) {
 
-bool collision_check(Player* p, Tile* tile)
-{
+  float halfWidth = p->size.x / 2.0f;
+  float halfHeight = p->size.y / 2.0f;
 
-  return (p->position.x < tile->position.x + tile->size.x &&
-          p->position.x + p->size.x > tile->position.x &&
-          p->position.y < tile->position.y + tile->size.y &&
-          p->position.y + p->size.y > tile->position.y);
+  float playerLeft = p->position.x - halfWidth;
+  float playerRight = p->position.x + halfWidth;
+  float playerTop = p->position.y + halfHeight;
+  float playerBottom = p->position.y - halfHeight;
+
+  float halfWidthTile = tile->size.x / 2.0f;
+  float halfHeightTile = tile->size.y / 2.0f;
+
+  float tileLeft = tile->position.x - halfWidthTile;
+  float tileRight = tile->position.x + halfWidthTile;
+  float tileTop = tile->position.y + halfHeightTile;
+  float tileBottom = tile->position.y - halfHeightTile;
+
+  return playerRight > tileLeft && playerLeft < tileRight &&
+         playerTop >= tileBottom && playerBottom <= tileTop;
 }
 
-void player_groun_collision(Player* p, Tile* tile){
+void player_groun_collision(Player *p, Tile *tile) {
 
- if(collision_check(p,tile)){
-  if(p->velocity.y > 0){
-    p->position.y = tile->position.y - p->size.y;
-  } else if (p->velocity.y < 0 ){
-    p->position.y = tile->position.y  + tile->size.y;
-    p->velocity.y = 0;
-    p->onGround = true;
+  if (collision_check(p, tile)) {
+    if (p->velocity.y > 0) {
+      p->position.y = tile->position.y - p->size.y;
+    } else if (p->velocity.y < 0) {
+      p->position.y = p->size.y / 2.f + tile->position.y + tile->size.y / 2.f;
+      p->velocity.y = 0;
+      p->onGround = true;
+    }
+  } else {
+
+    p->onGround = false;
   }
- } else{
-
- p->onGround = false;
- }
-
 }
 
 #endif

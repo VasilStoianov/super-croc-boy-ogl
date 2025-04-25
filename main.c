@@ -57,8 +57,6 @@ int main(void) {
   
   //create player
   player = createPlayer();
-  player->position.x = -0.65f;
-  player->position.y = 0.65f;
   
   //create tile
   Tile *tile = createTile();
@@ -93,7 +91,7 @@ int main(void) {
     scalePlayer(player, (vector){.x = 0.25f, .y = 0.25f});
     updatePlayer(player, shader.id, dt);
 
-    //drawe player
+    //draw player
     draw(VAO, shader.id);
     
     //draw tile

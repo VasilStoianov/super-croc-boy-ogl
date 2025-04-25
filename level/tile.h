@@ -2,6 +2,7 @@
 #define TILE_H
 #include "../math/matrix.h"
 #include "../math/vector.h"
+#include <stdlib.h>
 
 typedef struct {
   vector position;
@@ -11,9 +12,9 @@ typedef struct {
 
 Tile *createTile() {
   Tile *tile = (Tile *)malloc(sizeof(Tile));
-  tile->position = (vector){.x = -.6f, .y = -.75f, .z = 0.f};
   tile->translate = identity();
   tile->size = (vector){.x = .75f ,.y=1.f,.z=0.f};
+  tile->position = (vector){.x = -.6f+tile->size.x/2.f, .y = -.75f+tile->size.y/2.f, .z = 0.f};
   return tile;
 }
 

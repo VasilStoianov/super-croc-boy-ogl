@@ -35,6 +35,8 @@ Player *createPlayer() {
   p->translation = identity();
   p->onGround = false;
   p->size = (vector){.x = .75f * .25f,.y=1.f*.25f,.z=0.f};
+  p->position.x = -0.65f + p->size.x/2;
+  p->position.y = 0.65f + p->size.y /2;
 
 
   return p;
