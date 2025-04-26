@@ -5,9 +5,9 @@
 #include "math/matrix.h"
 #include "math/vector.h"
 #include "shader.h"
+#include "utils.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
-#include "utils.h"
 #include <stdlib.h>
 
 typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
@@ -45,10 +45,10 @@ Player *createPlayer() {
 }
 
 void updatePlayer(Player *player, unsigned int prograId, float dt) {
-  if(player->jump){
+  if (player->jump) {
     player->velocity.y += 6.f;
-    if(player->velocity.y > player->maxSpeedY){
-     player->jump = false;
+    if (player->velocity.y > player->maxSpeedY) {
+      player->jump = false;
     }
   }
 
@@ -68,8 +68,7 @@ void set_player_action(Player *player) {
       input_key_held(GLFW_KEY_LEFT) || input_key_pressed(GLFW_KEY_LEFT);
   player->action[RIGHT] =
       input_key_held(GLFW_KEY_RIGHT) || input_key_pressed(GLFW_KEY_RIGHT);
-  player->action[UP] =
-       input_key_pressed(GLFW_KEY_UP);
+  player->action[UP] = input_key_pressed(GLFW_KEY_UP);
   player->action[DOWN] =
       input_key_held(GLFW_KEY_DOWN) || input_key_pressed(GLFW_KEY_DOWN);
 }
@@ -93,15 +92,13 @@ void handlePlayerMovement(Player *player) {
     player->velocity.y += -.2f;
   }
   if (!player->action[LEFT] && !player->action[RIGHT]) {
-    player->velocity.x = 0.f;
+    player->velocity.x *= 0.3f;
+    if (fabs(player->velocity.x) < 0.01)
+      player->velocity.x = 0.f;
   }
-
-  
 
   player->velocity.x =
       clamp(player->velocity.x, -player->maxSpeedX, player->maxSpeedX);
 }
-
-
 
 #endif
