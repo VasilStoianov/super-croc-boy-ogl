@@ -8,13 +8,14 @@ typedef struct {
   vector position;
   mat4f translate;
   vector size;
+  float scale;
 } Tile;
 
 Tile *createTile() {
   Tile *tile = (Tile *)malloc(sizeof(Tile));
   tile->translate = identity();
   tile->size = (vector){.x = .75f ,.y=1.f,.z=0.f};
-  tile->position = (vector){.x = -.6f+tile->size.x/2.f, .y = -.75f+tile->size.y/2.f, .z = 0.f};
+  tile->position = (vector){.x = -.6f+tile->size.x/2.f, .y = -1.255f+tile->size.y/2.f, .z = 0.f};
   return tile;
 }
 

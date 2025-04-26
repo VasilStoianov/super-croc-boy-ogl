@@ -54,11 +54,11 @@ int main(void) {
   // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
   configVertices(&VBO, &VAO, &EBO);
-  
-  //create player
+
+  // create player
   player = createPlayer();
-  
-  //create tile
+
+  // create tile
   Tile *tile = createTile();
   create_tile_matrix(&(tile->translate), tile->position);
 
@@ -73,7 +73,7 @@ int main(void) {
   while (!glfwWindowShouldClose(window)) {
     time = glfwGetTime();
     fps++;
-//fps update every 1 second
+    // fps update every 1 second
     if (time - lastTime >= 1.0) {
       if (debug) {
         printf("FPS %d\n", fps);
@@ -85,21 +85,20 @@ int main(void) {
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    //update player 
 
+    // update player
     applyGravity(player, dt);
-    player_groun_collision(player,tile);
-    scalePlayer(player, (vector){.x = 0.25f, .y = 0.25f});
     updatePlayer(player, shader.id, dt);
+    player_groun_collision(player, tile);
+    scalePlayer(player, (vector){.x = 0.25f, .y = 0.25f});
 
-    //draw player
+    // draw player
     draw(VAO, shader.id);
-    
-    //draw tile
+
+    // draw tile
     set_matrix_uniform(tile->translate, shader.id);
     draw(VAO, shader.id);
-    
+
     glfwSwapBuffers(window);
     glfwPollEvents();
 
