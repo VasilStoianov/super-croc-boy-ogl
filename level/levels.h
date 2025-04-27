@@ -1,5 +1,5 @@
 #ifndef __LEVELS__
-#define __LEFELS__
+#define __LEVELS__
 #include "tile.h"
 #include <stdlib.h>
 #include <stdio.h>
