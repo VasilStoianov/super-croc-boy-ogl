@@ -17,7 +17,7 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 float dt = 1.0 / 60.f;
 Player *player = {0};
-
+Tile **tiles;
 int main(void) {
 
   glfwInit();
@@ -59,16 +59,23 @@ int main(void) {
   player = createPlayer();
 
   // create tile
-  Tile *tile = createTile();
-  create_tile_matrix(&(tile->translate), tile->position);
+  // Tile *tile = createTile();
+  tiles = malloc(5 * (sizeof(Tile)));
+  for (int x = 1; x < 5; x++) {
+    vector position = (vector){.x = 125.f * x, .y = 500.f};
+    vector size = {.x = 125.f,.y = 250.f,.z=0.f};
 
-  print_matrix(tile->translate);
+    tiles[x - 1] = create_tile_with_pos_and_scale(position, size);
+  };
+  tiles[4] = create_tile_with_pos_and_scale((vector){.x =125.f,.y = 250.f},(vector){.x = 125.f,.y = 250.f});
 
   double time = glfwGetTime();
   double lastFrame = 0;
   double lastTime = time;
   int fps = 0;
   bool debug = false;
+  mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
+  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
   // render loop
   while (!glfwWindowShouldClose(window)) {
     time = glfwGetTime();
@@ -87,18 +94,25 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update player
-    applyGravity(player, dt);
+
     updatePlayer(player, shader.id, dt);
-    player_groun_collision(player, tile);
-    scalePlayer(player, (vector){.x = 0.25f, .y = 0.25f});
+    applyGravity(player, dt);
+    // for (int x = 0; x < 4; x++) {
+    //   Tile *tile = tiles[x];
+    //   player_groun_collision(player, tile);
+    // }
+    player_ground_collision(player, tiles, 5,dt);
+    set_matrix_uniform(orthographic, shader.id, "projection");
 
     // draw player
     draw(VAO, shader.id);
 
     // draw tile
-    set_matrix_uniform(tile->translate, shader.id);
-    draw(VAO, shader.id);
-
+    for (int x = 0; x < 5; x++) {
+      Tile *tile = tiles[x];
+      set_matrix_uniform(tile->translate, shader.id, "translation");
+      draw(VAO, shader.id);
+    }
     glfwSwapBuffers(window);
     glfwPollEvents();
 

@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 
-static const float GRAVITY = -125.f;
+static const float GRAVITY = 525.f;
 
 void applyGravity(Player *player, float dt) {
 
@@ -84,6 +84,92 @@ void player_groun_collision(Player *p, Tile *tile) {
 
     p->onGround = false;
   }
+}
+
+
+// Call this each frame, after you’ve set p->velocity by input+gravity,
+// and before you render.
+void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
+    // 1) Precompute half-sizes once
+    float halfW = p->size.x * 0.5f;
+    float halfH = p->size.y * 0.5f;
+
+    // ----- MOVE ALONG X -----
+    // 2) Advance X position by velocity.x * dt
+    p->position.x += p->velocity.x * dt;
+
+    // 3) For each tile, check X overlap and resolve
+    for (int i = 0; i < tileCount; i++) {
+        Tile *t = tiles[i];
+        float tHalfW = t->size.x * 0.5f;
+        float tHalfH = t->size.y * 0.5f;
+
+        // 4) Compute AABB edges
+        float pL = p->position.x - halfW;
+        float pR = p->position.x + halfW;
+        float pT = p->position.y - halfH;
+        float pB = p->position.y + halfH;
+
+        float tL = t->position.x - tHalfW;
+        float tR = t->position.x + tHalfW;
+        float tT = t->position.y - tHalfH;
+        float tB = t->position.y + tHalfH;
+
+        // 5) Test for overlap on both axes
+        if (pR > tL && pL < tR && pB > tT && pT < tB) {
+            // 6) Resolve X penetration
+            if (p->velocity.x > 0) {
+                // moving right → push back to left side of tile
+                p->velocity.y *= .4f;
+                p->position.x = tL - halfW;
+            } else if (p->velocity.x < 0) {
+                // moving left → push back to right side of tile
+                p->velocity.y *= .4f;
+                p->position.x = tR + halfW;
+            }
+            p->velocity.x = 0;
+        }
+    }
+
+    // ----- MOVE ALONG Y -----
+    // 7) Advance Y position by velocity.y * dt
+    p->position.y += p->velocity.y * dt;
+
+    bool grounded = false;
+    for (int i = 0; i < tileCount; i++) {
+        Tile *t = tiles[i];
+        float tHalfW = t->size.x * 0.5f;
+        float tHalfH = t->size.y * 0.5f;
+
+        // 8) Recompute AABB edges because p->position.y changed
+        float pL = p->position.x - halfW;
+        float pR = p->position.x + halfW;
+        float pT = p->position.y - halfH;
+        float pB = p->position.y + halfH;
+
+        float tL = t->position.x - tHalfW;
+        float tR = t->position.x + tHalfW;
+        float tT = t->position.y - tHalfH;
+        float tB = t->position.y + tHalfH;
+
+        // 9) Test for overlap
+        if (pR > tL && pL < tR && pB > tT && pT < tB) {
+            // 10) Resolve Y penetration
+            if (p->velocity.y > 0) {
+                // moving down → we hit the top of the tile
+                p->position.y = tT - halfH;
+                p->velocity.y = 0;
+                grounded = true;
+            } else if (p->velocity.y < 0) {
+                // moving up → we hit the bottom of the tile above us
+                p->position.y = tB + halfH;
+                p->velocity.y = 0;
+            }
+        }
+    }
+
+    // 11) Update grounded flag
+    p->onGround = grounded;
 }
 
 #endif

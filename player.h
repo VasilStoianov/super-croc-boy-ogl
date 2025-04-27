@@ -32,22 +32,22 @@ Player *createPlayer() {
 
   p->velocity = createZeroVector();
   p->position = createZeroVector();
-  p->maxSpeedX = 1.f;
-  p->maxSpeedY = 10.f;
+  p->maxSpeedX = 500.f;
+  p->maxSpeedY = 450.f;
   p->translation = identity();
   p->onGround = false;
   p->jump = false;
-  p->size = (vector){.x = .75f * .25f, .y = 1.f * .25f, .z = 0.f};
-  p->position.x = -0.65f + p->size.x / 2.f;
-  p->position.y = 0.65f + p->size.y / 2;
+  p->size = (vector){.x = 75.f, .y = 75.f, .z = 0.f};
+  p->position.x = 600.f;
+  p->position.y = 65.f ;
 
   return p;
 }
 
 void updatePlayer(Player *player, unsigned int prograId, float dt) {
   if (player->jump) {
-    player->velocity.y += 6.f;
-    if (player->velocity.y > player->maxSpeedY) {
+    player->velocity.y -= 125.f;
+    if (player->velocity.y < -player->maxSpeedY) {
       player->jump = false;
     }
   }
@@ -56,7 +56,7 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
   player->position.y += player->velocity.y * dt;
 
   setTranslation(&(player->translation), player->position);
-  set_matrix_uniform(player->translation, prograId);
+  set_matrix_uniform(player->translation, prograId,"translation");
 }
 
 void scalePlayer(Player *player, vector scaleVec) {
@@ -68,7 +68,7 @@ void set_player_action(Player *player) {
       input_key_held(GLFW_KEY_LEFT) || input_key_pressed(GLFW_KEY_LEFT);
   player->action[RIGHT] =
       input_key_held(GLFW_KEY_RIGHT) || input_key_pressed(GLFW_KEY_RIGHT);
-  player->action[UP] = input_key_pressed(GLFW_KEY_UP);
+  player->action[UP] = input_key_held(GLFW_KEY_UP) ||  input_key_pressed(GLFW_KEY_UP);
   player->action[DOWN] =
       input_key_held(GLFW_KEY_DOWN) || input_key_pressed(GLFW_KEY_DOWN);
 }
@@ -77,25 +77,25 @@ void handlePlayerMovement(Player *player) {
 
   if (player->action[LEFT]) {
     // updatePlayerVelocity(player, -.2f, 0.f);
-    player->velocity.x += -.2f;
+    player->velocity.x += -35.2f;
   }
   if (player->action[RIGHT]) {
-    player->velocity.x += .2f;
+    player->velocity.x += 35.2f;
   }
 
   if (player->action[UP] && player->onGround) {
-    player->velocity.y = 4.65f;
     player->jump = true;
     player->onGround = false;
   }
-  if (player->action[DOWN]) {
-    player->velocity.y += -.2f;
-  }
+  // if (player->action[DOWN]) {
+  //   player->velocity.y += -.2f;
+  // }
   if (!player->action[LEFT] && !player->action[RIGHT]) {
-    player->velocity.x *= 0.3f;
-    if (fabs(player->velocity.x) < 0.01)
+    player->velocity.x *= .1f;
+    if (fabs(player->velocity.x) < 5.01)
       player->velocity.x = 0.f;
   }
+  printf("%f \n",player->velocity.x);
 
   player->velocity.x =
       clamp(player->velocity.x, -player->maxSpeedX, player->maxSpeedX);

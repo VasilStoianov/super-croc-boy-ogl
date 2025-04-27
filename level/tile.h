@@ -19,11 +19,21 @@ Tile *createTile() {
   return tile;
 }
 
-void create_tile_matrix(mat4f *tile_matrix, vector position) {
-  *tile_matrix = identity();
+
+
+void set_tile_translation(mat4f *tile_matrix, vector position) {
   setTranslation(tile_matrix, position);
 }
 
+Tile *create_tile_with_pos_and_scale(vector position,vector size) {
+  Tile *tile = (Tile *)malloc(sizeof(Tile));
+  tile->translate = identity();
+  tile->size = size; 
+  tile->position =  position;
+  set_tile_translation(&(tile->translate),tile->position);
+  scaleMatrix(&(tile->translate),size);
+   return tile;
+}
 
 void draw_tile(unsigned int VAO, unsigned int program_id) {
   glUseProgram(program_id);

@@ -105,8 +105,8 @@ Shader createShader(char *filePath) {
   return shader;
 }
 
-void set_matrix_uniform(mat4f matrix, unsigned int shaderId) {
-  GLint location = glGetUniformLocation(shaderId, "translation");
+void set_matrix_uniform(mat4f matrix, unsigned int shaderId,char * uniform_name) {
+  GLint location = glGetUniformLocation(shaderId, uniform_name);
   glUseProgram(shaderId);
   glUniformMatrix4fv(location,1,GL_TRUE,(const float*)&matrix.m);
 
