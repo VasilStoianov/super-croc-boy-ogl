@@ -9,7 +9,10 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 
+
 static const float GRAVITY = 525.f;
+static const int WORLD[34][25];
+static const int TILE_SIZE = 24;
 
 void applyGravity(Player *player, float dt) {
 
@@ -120,11 +123,11 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
             // 6) Resolve X penetration
             if (p->velocity.x > 0) {
                 // moving right → push back to left side of tile
-                p->velocity.y *= .4f;
+                p->velocity.y *= .8f;
                 p->position.x = tL - halfW;
             } else if (p->velocity.x < 0) {
                 // moving left → push back to right side of tile
-                p->velocity.y *= .4f;
+                p->velocity.y *= .8f;
                 p->position.x = tR + halfW;
             }
             p->velocity.x = 0;
@@ -170,6 +173,7 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
     // 11) Update grounded flag
     p->onGround = grounded;
+
 }
 
 #endif

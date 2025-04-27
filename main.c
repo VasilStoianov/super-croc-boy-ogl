@@ -1,6 +1,7 @@
 #include "game.h"
 #include "glad.h"
 #include "input.h"
+#include "level/levels.h"
 #include "level/tile.h"
 #include "player.h"
 #include "shader.h"
@@ -17,7 +18,6 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 float dt = 1.0 / 60.f;
 Player *player = {0};
-Tile **tiles;
 int main(void) {
 
   glfwInit();
@@ -60,14 +60,8 @@ int main(void) {
 
   // create tile
   // Tile *tile = createTile();
-  tiles = malloc(5 * (sizeof(Tile)));
-  for (int x = 1; x < 5; x++) {
-    vector position = (vector){.x = 125.f * x, .y = 500.f};
-    vector size = {.x = 125.f,.y = 250.f,.z=0.f};
-
-    tiles[x - 1] = create_tile_with_pos_and_scale(position, size);
-  };
-  tiles[4] = create_tile_with_pos_and_scale((vector){.x =125.f,.y = 250.f},(vector){.x = 125.f,.y = 250.f});
+  Level *lvl = load_leve1();
+  printf("Level loaded\n");
 
   double time = glfwGetTime();
   double lastFrame = 0;
@@ -101,15 +95,15 @@ int main(void) {
     //   Tile *tile = tiles[x];
     //   player_groun_collision(player, tile);
     // }
-    player_ground_collision(player, tiles, 5,dt);
+    player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
     // draw player
     draw(VAO, shader.id);
-
+    printf("Drawing tiles\n");
     // draw tile
-    for (int x = 0; x < 5; x++) {
-      Tile *tile = tiles[x];
+    for (int x = 0; x < lvl->tiles_count; x++) {
+      Tile *tile = lvl->tiles[x];
       set_matrix_uniform(tile->translate, shader.id, "translation");
       draw(VAO, shader.id);
     }
@@ -123,6 +117,7 @@ int main(void) {
     lastFrame = time;
   }
   free(player);
+  free_leve(lvl);
   glfwTerminate();
   return 1;
 }
