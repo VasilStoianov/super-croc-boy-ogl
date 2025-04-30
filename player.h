@@ -76,7 +76,6 @@ void set_player_action(Player *player) {
 void handlePlayerMovement(Player *player) {
 
   if (player->action[LEFT]) {
-    // updatePlayerVelocity(player, -.2f, 0.f);
     player->velocity.x += -35.2f;
   }
   if (player->action[RIGHT]) {
@@ -87,15 +86,11 @@ void handlePlayerMovement(Player *player) {
     player->jump = true;
     player->onGround = false;
   }
-  // if (player->action[DOWN]) {
-  //   player->velocity.y += -.2f;
-  // }
   if (!player->action[LEFT] && !player->action[RIGHT]) {
     player->velocity.x *= .1f;
     if (fabs(player->velocity.x) < 5.01)
       player->velocity.x = 0.f;
   }
-  printf("%f \n",player->velocity.x);
 
   player->velocity.x =
       clamp(player->velocity.x, -player->maxSpeedX, player->maxSpeedX);

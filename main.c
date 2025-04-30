@@ -89,23 +89,23 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update player
-
     updatePlayer(player, shader.id, dt);
     applyGravity(player, dt);
-    // for (int x = 0; x < 4; x++) {
-    //   Tile *tile = tiles[x];
-    //   player_groun_collision(player, tile);
-    // }
+    
     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
+    set_vec3_uniform(COLOR_RED,shader.id,"inColor");
     // draw player
     draw(VAO, shader.id);
     // draw tile
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
       set_matrix_uniform(tile->translate, shader.id, "translation");
+    
+    set_vec3_uniform(COLOR_BLACK,shader.id,"inColor");
       draw(VAO, shader.id);
+    
     }
     setTranslation(&camera,(vector){.x = cameraX,.y = 1.f});
     set_matrix_uniform(camera,shader.id,"camera");
