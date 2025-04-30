@@ -8,8 +8,9 @@
 #include "vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
+#include "camera.h"
 
-static const float GRAVITY = 525.f;
+static const float GRAVITY = 775.f;
 static const int WORLD[34][25];
 static const int TILE_SIZE = 24;
 
@@ -171,6 +172,17 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
   // 11) Update grounded flag
   p->onGround = grounded;
+}
+
+void move_camera(Player* player, Camera* camera,int shaderId){
+    float plLeft = player->position.x + player->size.x/2.f;
+    printf("%f\n",plLeft);
+
+    if(plLeft > 800.f){
+      camera->position.x -= 10.f;
+    set_camera(camera,shaderId);
+    }
+
 }
 
 #endif

@@ -46,7 +46,7 @@ Player *createPlayer() {
 
 void updatePlayer(Player *player, unsigned int prograId, float dt) {
   if (player->jump) {
-    player->velocity.y -= 125.f;
+    player->velocity.y -= 70.f;
     if (player->velocity.y < -player->maxSpeedY) {
       player->jump = false;
     }

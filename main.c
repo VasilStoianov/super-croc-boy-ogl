@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "camera.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -17,7 +18,7 @@ void processInput(GLFWwindow *window);
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 float dt = 1.0 / 60.f;
-  float cameraX = 1.f;
+float cameraX = 1.f;
 Player *player = {0};
 int main(void) {
 
@@ -71,7 +72,8 @@ int main(void) {
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
   scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
   // render loop
-  mat4f camera = identity();
+  Camera *camera =create_camera(); 
+  set_camera(camera,shader.id);
   while (!glfwWindowShouldClose(window)) {
     time = glfwGetTime();
     fps++;
@@ -91,24 +93,23 @@ int main(void) {
     // update player
     updatePlayer(player, shader.id, dt);
     applyGravity(player, dt);
-    
+
     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
-    set_vec3_uniform(COLOR_RED,shader.id,"inColor");
+    set_vec3_uniform(COLOR_RED, shader.id, "inColor");
     // draw player
     draw(VAO, shader.id);
     // draw tile
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
       set_matrix_uniform(tile->translate, shader.id, "translation");
-    
-    set_vec3_uniform(COLOR_BLACK,shader.id,"inColor");
+
+      set_vec3_uniform(COLOR_BLACK, shader.id, "inColor");
       draw(VAO, shader.id);
-    
     }
-    setTranslation(&camera,(vector){.x = cameraX,.y = 1.f});
-    set_matrix_uniform(camera,shader.id,"camera");
+
+    move_camera(player,camera,shader.id);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -131,12 +132,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
-  }
-  if(glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
-    cameraX -= 40.f;
-  }
-if(glfwGetKey(window,GLFW_KEY_A) == GLFW_PRESS){
-    cameraX += 40.f;
   }
   input_update();
   set_player_action(player);

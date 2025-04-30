@@ -10,31 +10,32 @@
 char* lvl1[] = 
 {
 // "########################",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#                               #",
-"#################################"};
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                                          #",
+"#                           #              #",
+"#                         #      #         #",
+"#                       #        #         #",
+"############################################",
+NULL};
 
 typedef struct {
 
@@ -45,11 +46,13 @@ typedef struct {
 Level* load_leve1(){
     Level* level1 =(Level*) malloc(sizeof(Level));
     int counter = 0;
+    int index = 0;
+    int row = 0;
     level1->tiles_count = 0;
-    Tile** tiles =(Tile**) malloc(111*(sizeof(Tile*)));
-    for(int x = 0; x<25; x++){
-        for(int y = 0; y<34; y++){
-         if(lvl1[x][y] == '#'){
+    Tile** tiles =(Tile**) malloc(350*(sizeof(Tile*)));
+      while(lvl1[row] != NULL){   
+        while(lvl1[row][index] != '\0' ){  
+        if(lvl1[row][index] == '#'){
             Tile* tile =(Tile*) malloc(sizeof(Tile));
              vector size = {
                 .x = 24.f,
@@ -57,15 +60,16 @@ Level* load_leve1(){
              };
 
             vector position = {
-                .x =24.f*y,
-                .y = 24.f*x 
+                .x =24.f*index,
+                .y = 24.f*row 
             };
             tile = create_tile_with_pos_and_scale(position,size);
-            printf("%d \n",counter);
             tiles[counter++] = tile;
         }    
-        
+        index++;
         }
+       index = 0;
+       row++; 
     }   
     level1->tiles_count = counter;
     level1->tiles = tiles;
