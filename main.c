@@ -69,6 +69,7 @@ int main(void) {
   double lastTime = time;
   int fps = 0;
   bool debug = false;
+                       //   left,width,top, heidht, near,far)
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
   scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
   // render loop
@@ -109,7 +110,7 @@ int main(void) {
       draw(VAO, shader.id);
     }
 
-    move_camera(player,camera,shader.id);
+    move_camera(player,camera,shader.id,lvl,dt);
     glfwSwapBuffers(window);
     glfwPollEvents();
 

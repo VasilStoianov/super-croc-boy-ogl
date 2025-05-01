@@ -1,14 +1,15 @@
 #ifndef __game__
 #define __game__
 
+#include "camera.h"
 #include "glad.h"
+#include "level/levels.h"
 #include "level/tile.h"
 #include "player.h"
 #include "utils.h"
 #include "vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
-#include "camera.h"
 
 static const float GRAVITY = 775.f;
 static const int WORLD[34][25];
@@ -174,15 +175,17 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
   p->onGround = grounded;
 }
 
-void move_camera(Player* player, Camera* camera,int shaderId){
-    float plLeft = player->position.x + player->size.x/2.f;
-    printf("%f\n",plLeft);
+void move_camera(Player *player, Camera *camera, int shaderId, Level *level,
+                 float deltaTime) {
+  float camPlayerLine = camera->position.x + player->position.x - player->size.x /2.f;
 
-    if(plLeft > 800.f){
-      camera->position.x -= 10.f;
-    set_camera(camera,shaderId);
-    }
-
+  if(camPlayerLine > 600.f && (camera->position.x * -1.f) + 800.f < level->size.x){ 
+  camera->position.x -= 850.f* deltaTime;
+    set_camera(camera, shaderId);
+  } else if(camPlayerLine < 200.f && camera->position.x *-1.f> 0 ){
+  camera->position.x += 850.f* deltaTime;
+    set_camera(camera, shaderId);
+  }
 }
 
 #endif
