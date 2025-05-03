@@ -6,8 +6,9 @@ out vec3 color;
 uniform mat4 translation;
 uniform mat4 projection;
 uniform mat4 camera;
-
+uniform mat4 shake;
 void main() {
-     gl_Position = projection *camera*translation* vec4(aPos, 1.0);
+     mat4 cam = camera * shake;
+     gl_Position = projection *cam*translation* vec4(aPos, 1.0);
      color = inColor;
  };

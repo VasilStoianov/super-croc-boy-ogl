@@ -19,6 +19,7 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 float dt = 1.0 / 60.f;
 float cameraX = 1.f;
+bool shakeThecamera = false;
 Player *player = {0};
 int main(void) {
 
@@ -76,6 +77,7 @@ int main(void) {
   Camera *camera =create_camera(); 
   set_camera(camera,shader.id);
   while (!glfwWindowShouldClose(window)) {
+    camera->startShaking = shakeThecamera;
     time = glfwGetTime();
     fps++;
     // fps update every 1 second
@@ -133,6 +135,9 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
+  }
+  if(glfwGetKey(window,GLFW_KEY_SPACE) == GLFW_PRESS){
+    shakeThecamera = !shakeThecamera;
   }
   input_update();
   set_player_action(player);

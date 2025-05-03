@@ -177,15 +177,18 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
 void move_camera(Player *player, Camera *camera, int shaderId, Level *level,
                  float deltaTime) {
-  float camPlayerLine = camera->position.x + player->position.x - player->size.x /2.f;
+  float camPlayerLine =
+      camera->position.x + player->position.x - player->size.x / 2.f;
 
-  if(camPlayerLine > 600.f && (camera->position.x * -1.f) + 800.f < level->size.x){ 
-  camera->position.x -= 850.f* deltaTime;
-    set_camera(camera, shaderId);
-  } else if(camPlayerLine < 200.f && camera->position.x *-1.f> 0 ){
-  camera->position.x += 850.f* deltaTime;
-    set_camera(camera, shaderId);
+  if (camPlayerLine > 600.f &&
+      (camera->position.x * -1.f) + 800.f < level->size.x) {
+    camera->position.x -= 850.f * deltaTime;
+  } else if (camPlayerLine < 200.f && camera->position.x * -1.f > 0) {
+    camera->position.x += 850.f * deltaTime;
   }
+
+  set_camera(camera, shaderId);
+  shake_camera(camera, deltaTime, shaderId);
 }
 
 #endif
