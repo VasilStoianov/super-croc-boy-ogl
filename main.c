@@ -97,7 +97,8 @@ int main(void) {
     updatePlayer(player, shader.id, dt);
     applyGravity(player, dt);
 
-    player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
+    check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
+    // player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
     set_vec3_uniform(COLOR_RED, shader.id, "inColor");

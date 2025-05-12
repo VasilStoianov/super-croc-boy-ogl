@@ -20,7 +20,8 @@ typedef struct Player {
   float maxSpeedX;
   float maxSpeedY;
   bool onGround;
-  int action[LAST_DIR];
+  vector vertices[4];
+  Direction action[LAST_DIR];
   mat4f translation;
   bool jump;
 
@@ -41,6 +42,11 @@ Player *createPlayer() {
   p->position.x = 600.f;
   p->position.y = 65.f ;
 
+  p->vertices[0] = (vector){.x = p->position.x - p->size.x,.y = p->position.y -p->size.y };
+  p->vertices[1] = (vector){.x = p->position.x + p->size.x,.y = p->position.y -p->size.y };
+  p->vertices[2] = (vector){.x = p->position.x + p->size.x,.y = p->position.y +p->size.y };
+  p->vertices[3] = (vector){.x = p->position.x - p->size.x,.y = p->position.y +p->size.y };
+
   return p;
 }
 
@@ -54,6 +60,12 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
 
   player->position.x += player->velocity.x * dt;
   player->position.y += player->velocity.y * dt;
+  
+  player->vertices[0] = (vector){.x = player->position.x - player->size.x,.y = player->position.y -player->size.y };
+  player->vertices[1] = (vector){.x = player->position.x + player->size.x,.y = player->position.y -player->size.y };
+  player->vertices[2] = (vector){.x = player->position.x + player->size.x,.y = player->position.y +player->size.y };
+  player->vertices[3] = (vector){.x = player->position.x - player->size.x,.y = player->position.y +player->size.y };
+
 
   setTranslation(&(player->translation), player->position);
   set_matrix_uniform(player->translation, prograId,"translation");

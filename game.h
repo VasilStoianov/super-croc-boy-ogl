@@ -175,6 +175,157 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
   p->onGround = grounded;
 }
 
+vector furtherst_point(vector vertices[4], vector dir) {
+  float best_dot = -__FLT_MAX__;
+  vector best = vertices[0];
+  for (int x = 1; x < 4; x++) {
+    float d = dot(vertices[x], dir);
+    if (d > best_dot) {
+      best = vertices[x];
+      best_dot = d;
+    }
+  }
+  return best;
+}
+vector support(vector rect1_vertices[4], vector rect2_vertices[4], vector dir) {
+
+  return subtract(furtherst_point(rect1_vertices, dir),
+                  furtherst_point(rect2_vertices, dir));
+}
+
+bool line_case(vector simplex[3], vector *direction) {
+  // Let A = simplex[1] (newest), B = simplex[0] (older)
+  vector A = simplex[1];
+  vector B = simplex[0];
+
+  vector AB = subtract(B, A);
+  vector AO = subtract((vector){0.f, 0.f, 0.f}, A);
+
+  // Perpendicular to AB, toward origin
+  vector ABperp = cross(cross(AB, AO), AB);
+
+  // Update direction
+  *direction = ABperp;
+
+  // Keep only A and B in the simplex
+  simplex[0] = B;
+  simplex[1] = A;
+
+  return false;
+}
+bool triangle_case(vector simplex[3], vector *direction) {
+  vector A = simplex[2]; // newest
+  vector B = simplex[1];
+  vector C = simplex[0];
+  vector origin = {0.f, 0.f, 0.f};
+
+  vector AB = subtract(B, A);
+  vector AC = subtract(C, A);
+  vector AO = subtract(origin, A);
+
+  // Compute perpendiculars to edges AB and AC toward origin
+  vector ABperp = cross(cross(AC, AB), AB);
+  vector ACperp = cross(cross(AB, AC), AC);
+
+  if (dot(ABperp, AO) > 0.f) {
+    // Remove point C → keep [B, A]
+    simplex[0] = B;
+    simplex[1] = A;
+    *direction = ABperp;
+    return false;
+  }
+
+  if (dot(ACperp, AO) > 0.f) {
+    // Remove point B → keep [C, A]
+    simplex[0] = C;
+    simplex[1] = A;
+    *direction = ACperp;
+    return false;
+  }
+
+  // Origin is inside triangle → collision
+  return true;
+}
+
+bool handle_simplex(vector simplex[3], vector *direction, int simplex_index) {
+  if (simplex_index < 2) {
+    return line_case(simplex, direction);
+  }
+  return triangle_case(simplex, direction);
+}
+
+bool gjk_collision(Player *player, Tile *tiles) {
+  vector simplex[3] = {0};
+  vector origin = {0.f, 0.f, 0.f};
+  int simplex_index = 0;
+
+  vector direction = {1.f, 0.f, 0.f};
+  simplex[simplex_index] =
+      support(player->vertices, tiles->vertices, direction);
+  simplex_index++;
+  direction = subtract(origin, simplex[0]);
+  int iterations = 0;
+  int max_iterations = 25;
+  while (true) {
+    if (++iterations > max_iterations)
+      return false;
+    vector A = support(player->vertices, tiles->vertices, direction);
+    if (dot(A, direction) < 0) {
+      return false;
+    }
+
+    simplex[simplex_index] = A;
+    simplex_index++;
+    if (simplex_index > 2)
+      simplex_index = 2;
+    if (handle_simplex(simplex, &direction, simplex_index)) {
+      return true;
+    }
+  }
+}
+
+void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
+
+  float halfW = player->size.x * 0.5f;
+  float halfH = player->size.y * 0.5f;
+ float grounded = false;
+  for (int x = 0; x < tiles_count; x++) {
+    float tHalfW = tiles[x]->size.x * 0.5f;
+    float tHalfH = tiles[x]->size.y * 0.5f;
+
+
+    float tL = tiles[x]->position.x - tHalfW;
+    float tR = tiles[x]->position.x + tHalfW;
+    float tT = tiles[x]->position.y - tHalfH;
+    float tB = tiles[x]->position.y + tHalfH;
+
+    if (gjk_collision(player, tiles[x])) {
+
+      if (player->velocity.y > 0.f) {
+        grounded = true;
+        player->position.y = tT - halfH;
+        player->velocity.y = 0;
+      }
+      else if(player->velocity.y<0.f){
+        player->position.y = tT + halfH;
+        player->velocity.y = 12.f;
+      }
+
+      if(player->velocity.x > 0.f){
+        player->position.x = tL +halfW;
+        player->velocity.x = 0;
+      }
+      else if(player->velocity.y < 0.f){
+        player->position.x = tL + halfW;
+        player->velocity.x = 0;
+      }
+
+
+    }
+  }
+  player->onGround = grounded;
+}
+
 void move_camera(Player *player, Camera *camera, int shaderId, Level *level,
                  float deltaTime) {
   float camPlayerLine =
