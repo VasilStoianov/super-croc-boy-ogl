@@ -1,8 +1,8 @@
 #ifndef __CAMERA__
 #define __CAMERA__
-#include "math/matrix.h"
-#include "math/vector.h"
-#include "shader.h"
+#include "matrix.h"
+#include "vector.h"
+#include "../shaders/shader.h"
 #include <stdbool.h>
 
 typedef struct {

@@ -1,17 +1,17 @@
 #include "game.h"
-#include "glad.h"
+#include "lib/glad.h"
 #include "input.h"
 #include "level/levels.h"
 #include "level/tile.h"
 #include "player.h"
-#include "shader.h"
+#include "shaders/shader.h"
 #include "stdbool.h"
-#include "vertices.h"
+#include "vertices/vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "camera.h"
-
+#include "math/camera.h"
+#include "math/physic.h"
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 

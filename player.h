@@ -1,14 +1,15 @@
 #ifndef __player__
 #define __player__
-#include "glad.h"
+#include "lib/glad.h"
 #include "input.h"
 #include "math/matrix.h"
 #include "math/vector.h"
-#include "shader.h"
+#include "shaders/shader.h"
 #include "utils.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
 
 typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
 

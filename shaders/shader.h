@@ -1,11 +1,11 @@
 #pragma once
-#include "glad.h"
+#include "../lib/glad.h"
 #include "GLFW/glfw3.h"
-#include "math/vector.h"
+#include "../math/vector.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "math/matrix.h"
+#include "../math/matrix.h"
 
 typedef struct Shader {
   int id;
