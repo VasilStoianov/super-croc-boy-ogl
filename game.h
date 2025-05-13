@@ -5,7 +5,7 @@
 #include "lib/glad.h"
 #include "level/levels.h"
 #include "level/tile.h"
-#include "player.h"
+#include "structs/player.h"
 #include "utils.h"
 #include "vertices/vertices.h"
 #include <GLFW/glfw3.h>

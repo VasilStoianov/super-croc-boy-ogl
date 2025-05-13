@@ -1,8 +1,9 @@
 #ifndef __PHYSIC__
 #define __PHYSIC__
 #include "vector.h"
-#include "../player.h"
+#include "../structs/player.h"
 #include "../level/tile.h"
+#include "../structs/minkowski.h"
 
 static const float GRAVITY = 775.f;
 static const int TILE_SIZE = 24;
@@ -33,13 +34,11 @@ vector support(vector rect1_vertices[4], vector rect2_vertices[4], vector dir) {
                   furtherst_point(rect2_vertices, dir));
 }
 
-bool line_case(vector simplex[3], vector *direction) {
+bool line_case(Convex *convex, vector *direction) {
   // Let A = simplex[1] (newest), B = simplex[0] (older)
-  vector A = simplex[1];
-  vector B = simplex[0];
 
-  vector AB = subtract(B, A);
-  vector AO = subtract((vector){0.f, 0.f, 0.f}, A);
+  vector AB = subtract(convex->points[0], convex->points[1]);
+  vector AO = subtract((vector){0.f, 0.f, 0.f}, convex->points[1]);
 
   // Perpendicular to AB, toward origin
   vector ABperp = cross(cross(AB, AO), AB);
@@ -48,19 +47,17 @@ bool line_case(vector simplex[3], vector *direction) {
   *direction = ABperp;
 
   // Keep only A and B in the simplex
-  simplex[0] = B;
-  simplex[1] = A;
 
   return false;
 }
-bool triangle_case(vector simplex[3], vector *direction) {
-  vector A = simplex[2]; // newest
-  vector B = simplex[1];
-  vector C = simplex[0];
+bool triangle_case(Convex *convex, vector *direction) {
+  vector A = convex->points[2]; // newest
+  vector B = convex->points[1];
+  vector C = convex->points[0];
   vector origin = {0.f, 0.f, 0.f};
 
-  vector AB = subtract(B, A);
-  vector AC = subtract(C, A);
+  vector AB = subtract(B,A);
+  vector AC = subtract(C,A);
   vector AO = subtract(origin, A);
 
   // Compute perpendiculars to edges AB and AC toward origin
@@ -69,16 +66,17 @@ bool triangle_case(vector simplex[3], vector *direction) {
 
   if (dot(ABperp, AO) > 0.f) {
     // Remove point C → keep [B, A]
-    simplex[0] = B;
-    simplex[1] = A;
+    convex->points[0] = B;
+    convex->points[1] = A;
+
     *direction = ABperp;
     return false;
   }
 
   if (dot(ACperp, AO) > 0.f) {
     // Remove point B → keep [C, A]
-    simplex[0] = C;
-    simplex[1] = A;
+    convex->points[0] = convex->points[0];
+    convex->points[1] = convex->points[2];
     *direction = ACperp;
     return false;
   }
@@ -87,38 +85,40 @@ bool triangle_case(vector simplex[3], vector *direction) {
   return true;
 }
 
-bool handle_simplex(vector simplex[3], vector *direction, int simplex_index) {
-  if (simplex_index < 2) {
-    return line_case(simplex, direction);
+bool handle_simplex(Convex *convex, vector *direction) {
+  if (convex->side_counter < 2) {
+    return line_case(convex, direction);
   }
-  return triangle_case(simplex, direction);
+  return triangle_case(convex, direction);
 }
 
 bool gjk_collision(Player *player, Tile *tiles) {
-  vector simplex[3] = {0};
-  vector origin = {0.f, 0.f, 0.f};
-  int simplex_index = 0;
+  
+  Convex convex;
+  create_convex(&convex);
+
+    vector origin = {0.f, 0.f, 0.f};
 
   vector direction = {1.f, 0.f, 0.f};
-  simplex[simplex_index] =
+  convex.points[convex.side_counter] =
       support(player->vertices, tiles->vertices, direction);
-  simplex_index++;
-  direction = subtract(origin, simplex[0]);
+  convex.side_counter++;
+      direction = subtract(origin, convex.points[0]);
   int iterations = 0;
   int max_iterations = 25;
   while (true) {
     if (++iterations > max_iterations)
       return false;
-    vector A = support(player->vertices, tiles->vertices, direction);
-    if (dot(A, direction) < 0) {
+    vector B = support(player->vertices, tiles->vertices, direction);
+    if (dot(B, direction) < 0) {
       return false;
     }
 
-    simplex[simplex_index] = A;
-    simplex_index++;
-    if (simplex_index > 2)
-      simplex_index = 2;
-    if (handle_simplex(simplex, &direction, simplex_index)) {
+    convex.points[convex.side_counter] = B;
+     convex.side_counter++;
+    if (convex.side_counter > 2)
+      convex.side_counter = 2;
+    if (handle_simplex(&convex, &direction)) {
       return true;
     }
   }
@@ -151,14 +151,6 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
         player->velocity.y = 12.f;
       }
 
-      if(player->velocity.x > 0.f){
-        player->position.x = tL +halfW;
-        player->velocity.x = 0;
-      }
-      else if(player->velocity.y < 0.f){
-        player->position.x = tL + halfW;
-        player->velocity.x = 0;
-      }
 
 
     }

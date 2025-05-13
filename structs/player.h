@@ -1,11 +1,11 @@
 #ifndef __player__
 #define __player__
-#include "lib/glad.h"
-#include "input.h"
-#include "math/matrix.h"
-#include "math/vector.h"
-#include "shaders/shader.h"
-#include "utils.h"
+#include "../lib/glad.h"
+#include "../input.h"
+#include "../math/matrix.h"
+#include "../math/vector.h"
+#include "../shaders/shader.h"
+#include "../utils.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include <stdlib.h>

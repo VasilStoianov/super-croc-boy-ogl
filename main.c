@@ -3,7 +3,7 @@
 #include "input.h"
 #include "level/levels.h"
 #include "level/tile.h"
-#include "player.h"
+#include "structs/player.h"
 #include "shaders/shader.h"
 #include "stdbool.h"
 #include "vertices/vertices.h"
