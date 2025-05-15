@@ -112,7 +112,6 @@ int main(void) {
       set_vec3_uniform(COLOR_BLACK, shader.id, "inColor");
       draw(VAO, shader.id);
     }
-
     move_camera(player,camera,shader.id,lvl,dt);
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -61,11 +61,15 @@ float vectorLength(vector a) {
 
 float dot(vector a, vector b) { return a.x * b.x + a.y + b.y + a.z * b.z; }
 
-void normalize(vector a) {
-  float length = vectorLength(a);
-  a.x = a.x / length;
-  a.y = a.y / length;
-  a.z = a.z / length;
+void normalize(vector *v) {
+float len = sqrtf(v->x * v->x + v->y * v->y);
+    if (len > 1e-6f) {
+        v->x /= len;
+        v->y /= len;
+    } else {
+        v->x = 0.f;
+        v->y = 0.f;
+    }
 }
 
 vector cross(vector a, vector b) {
@@ -75,3 +79,16 @@ vector cross(vector a, vector b) {
   res.z = a.x * b.y - a.y * b.x;
   return res;
 }
+
+vector tripleCross2D(vector a, vector b) {
+    float dot_a_b = a.x * b.x + a.y * b.y;
+    float dot_a_a = a.x * a.x + a.y * a.y;
+
+    // result = b - a * (dot(b, a) / dot(a, a))
+    float scalar = dot_a_b / dot_a_a;
+    return (vector){
+        b.x - a.x * scalar,
+        b.y - a.y * scalar
+    };
+}
+
