@@ -63,7 +63,7 @@ bool triangle_case(Convex *convex, vector *direction) {
     // Origin is outside AB
     convex->points[0] = B;
     convex->points[1] = A;
-    convex->side_counter = 2;
+    convex->side_counter--;
     *direction = ABperp;
     return false;
   }
@@ -72,7 +72,7 @@ bool triangle_case(Convex *convex, vector *direction) {
     // Origin is outside AC
     convex->points[0] = C;
     convex->points[1] = A;
-    convex->side_counter = 2;
+    convex->side_counter--;
     *direction = ACperp;
     return false;
   }
@@ -89,35 +89,68 @@ bool handle_simplex(Convex *convex, vector *direction) {
 }
 
 bool gjk_collision(Player *player, Tile *tiles, Convex *out_convex) {
-
   Convex convex;
   create_convex(&convex);
 
-  vector origin = {0.f, 0.f, 0.f};
+  vector origin = {0.f, 0.f};
 
-  vector direction = {1.f, 0.f, 0.f};
-  convex.points[convex.side_counter] =
+  vector direction = (vector){1.f, 0.f};
+  convex.points[convex.side_counter++] =
       support(player->vertices, tiles->vertices, direction);
-  convex.side_counter++;
+
   direction = subtract(origin, convex.points[0]);
+
   int iterations = 0;
   int max_iterations = 25;
+
   while (true) {
     if (++iterations > max_iterations)
       return false;
+
     vector B = support(player->vertices, tiles->vertices, direction);
+    printf("support() = (%.2f, %.2f), dir = (%.2f, %.2f)\n", B.x, B.y,
+           direction.x, direction.y);
+
+    printf("player vertices:\n");
+    for (int i = 0; i < 4; i++) {
+      printf("  V%d: (%.2f, %.2f)\n", i, player->vertices[i].x,
+             player->vertices[i].y);
+    }
+
     if (dot(B, direction) < 0) {
       return false;
     }
 
     convex.points[convex.side_counter++] = B;
+
     if (convex.side_counter > 3) {
+      // rotate points to keep last 3
       convex.points[0] = convex.points[1];
       convex.points[1] = convex.points[2];
       convex.points[2] = B;
       convex.side_counter = 3;
-    };
+    }
+
     if (handle_simplex(&convex, &direction)) {
+      // Ensure triangle for EPA (if only 2 points exist, generate 3rd)
+      if (convex.side_counter == 2) {
+        vector A = convex.points[1];
+        vector B = convex.points[0];
+        vector AB = subtract(B, A);
+        vector perp = (vector){-AB.y, AB.x};
+        normalize(&perp);
+
+        vector C = support(player->vertices, tiles->vertices, perp);
+        convex.points[2] = C;
+        convex.side_counter = 3;
+      }
+
+      printf("Final GJK simplex (%d points):\n", convex.side_counter);
+      for (int i = 0; i < convex.side_counter; i++) {
+        printf("  P%d: (%.2f, %.2f)\n", i, convex.points[i].x,
+               convex.points[i].y);
+      }
+
       memcpy(out_convex, &convex, sizeof(Convex));
       return true;
     }
@@ -140,11 +173,11 @@ Edge find_closest(Convex convex) {
     float distance = dot(normal, a);
 
     // Flip normal to point outward if needed
-    if (distance < 0.f) {
-      normal.x = -normal.x;
-      normal.y = -normal.y;
-      distance = -distance;
-    }
+    // if (distance < 0.f) {
+    //   normal.x = -normal.x;
+    //   normal.y = -normal.y;
+    //   distance = -distance;
+    // }
 
     if (distance < closest) {
       closest = distance;
@@ -159,7 +192,7 @@ Edge find_closest(Convex convex) {
 }
 
 bool epa(Player *player, Tile *tile, Convex convex, Edge *out_edge) {
-  const int max_iterations = 32;
+  const int max_iterations = 16;
   const float tolerance = 0.001f;
 
   for (int iter = 0; iter < max_iterations; iter++) {
@@ -173,6 +206,7 @@ bool epa(Player *player, Tile *tile, Convex convex, Edge *out_edge) {
 
     if ((d - edge.depth) < tolerance) {
       out_edge->depth = d;
+      printf("Out %f %f\n", edge.normal.x, edge.normal.y);
       out_edge->normal = edge.normal;
       return true;
     }
@@ -199,28 +233,27 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
       if (epa(player, tiles[x], *convex, &edge)) {
 
         // Debug: print position before correction
-        printf("Player position before: %f %f\n", player->position.x,
-               player->position.y);
-
+        printf("Normal and depth %f %f %f\n", edge.normal.x, edge.normal.y,
+               edge.depth);
         // Clamp max correction depth
         float depth = fminf(edge.depth, 1.0f);
         float bias = 0.01f; // Stronger bias for stable separation
 
         // Snap normal to dominant axis
-        vector snapped_normal;
-        if (fabsf(edge.normal.x) > fabsf(edge.normal.y)) {
-          // Dominant X axis
-          snapped_normal.x = edge.normal.x > 0.f ? 1.f : -1.f;
-          snapped_normal.y = 0.f;
-        } else {
-          // Dominant Y axis
-          snapped_normal.x = 0.f;
-          snapped_normal.y = edge.normal.y > 0.f ? 1.f : -1.f;
-        }
+        vector snapped_normal = edge.normal;
+        // if (fabsf(edge.normal.x) > fabsf(edge.normal.y)) {
+        //   // Dominant X axis
+        //   snapped_normal.x = edge.normal.x > 0.f ? 1.f : -1.f;
+        //   snapped_normal.y = 0.f;
+        // } else {
+        //   // Dominant Y axis
+        //   snapped_normal.x = 0.f;
+        //   snapped_normal.y = edge.normal.y > 0.f ? 1.f : -1.f;
+        // }
 
         // Apply correction
         vector correction = snapped_normal;
-        scale(&correction, depth + bias);
+        scale(&correction, edge.depth + bias);
         addToVector(&player->position, correction);
 
         // If pushed upward, mark as grounded
@@ -228,9 +261,9 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
           grounded = true;
           player->velocity.y = 0.f;
         }
-       if(snapped_normal.x >0.f){
-        player->velocity.x = 0.f;
-       }
+        if (snapped_normal.x < 0.f) {
+          player->velocity.x = 0.f;
+        }
       }
     }
     free(convex);

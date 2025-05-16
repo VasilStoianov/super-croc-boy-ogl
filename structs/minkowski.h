@@ -4,7 +4,7 @@
 
 typedef struct{
 
-    vector points[4];
+    vector points[8];
     int side_counter;   
  
 

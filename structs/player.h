@@ -43,11 +43,13 @@ Player *createPlayer() {
   p->position.x = 600.f;
   p->position.y = 65.f ;
 
-  p->vertices[0] = (vector){.x = p->position.x - p->size.x,.y = p->position.y -p->size.y };
-  p->vertices[1] = (vector){.x = p->position.x + p->size.x,.y = p->position.y -p->size.y };
-  p->vertices[2] = (vector){.x = p->position.x + p->size.x,.y = p->position.y +p->size.y };
-  p->vertices[3] = (vector){.x = p->position.x - p->size.x,.y = p->position.y +p->size.y };
+float hw = p->size.x * 0.5f;
+float hh = p->size.y * 0.5f;
 
+p->vertices[0] = (vector){p->position.x - hw, p->position.y - hh}; // top-left
+p->vertices[1] = (vector){p->position.x + hw, p->position.y - hh}; // top-right
+p->vertices[2] = (vector){p->position.x + hw, p->position.y + hh}; // bottom-right
+p->vertices[3] = (vector){p->position.x - hw, p->position.y + hh}; // bottom-left
   return p;
 }
 
@@ -62,12 +64,13 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
   player->position.x += player->velocity.x * dt;
   player->position.y += player->velocity.y * dt;
   
-  player->vertices[0] = (vector){.x = player->position.x - player->size.x,.y = player->position.y -player->size.y };
-  player->vertices[1] = (vector){.x = player->position.x + player->size.x,.y = player->position.y -player->size.y };
-  player->vertices[2] = (vector){.x = player->position.x + player->size.x,.y = player->position.y +player->size.y };
-  player->vertices[3] = (vector){.x = player->position.x - player->size.x,.y = player->position.y +player->size.y };
+float hw = player->size.x * 0.5f;
+float hh = player->size.y * 0.5f;
 
-
+player->vertices[0] = (vector){player->position.x - hw, player->position.y - hh}; // top-left
+player->vertices[1] = (vector){player->position.x + hw, player->position.y - hh}; // top-right
+player->vertices[2] = (vector){player->position.x + hw, player->position.y + hh}; // bottom-right
+player->vertices[3] = (vector){player->position.x - hw, player->position.y + hh}; // bottom-left
   setTranslation(&(player->translation), player->position);
   set_matrix_uniform(player->translation, prograId,"translation");
 }
