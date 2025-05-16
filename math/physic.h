@@ -8,6 +8,10 @@
 
 static const float GRAVITY = 775.f;
 static const int TILE_SIZE = 24;
+
+
+
+
 void applyGravity(Player *player, float dt) {
 
   if (!player->onGround) {
@@ -15,39 +19,77 @@ void applyGravity(Player *player, float dt) {
   }
 }
 
-vector furtherst_point(vector vertices[4], vector dir) {
-  float best_dot = -__FLT_MAX__;
-  vector best;
-  for (int x = 0; x < 4; x++) {
-    float d = dot(vertices[x], dir);
-    if (d > best_dot) {
-      best = vertices[x];
-      best_dot = d;
-    }
-  }
-  return best;
+bool aabb_overlap(vector min1, vector max1, vector min2, vector max2) {
+    return (min1.x <= max2.x && max1.x >= min2.x) &&
+           (min1.y <= max2.y && max1.y >= min2.y);
 }
-vector support(vector rect1_vertices[4], vector rect2_vertices[4], vector dir) {
 
-  return subtract(furtherst_point(rect1_vertices, dir),
-                  furtherst_point(rect2_vertices, dir));
+vector get_min(vector vertices[4]) {
+    vector min = vertices[0];
+    for (int i = 1; i < 4; i++) {
+        if (vertices[i].x < min.x) min.x = vertices[i].x;
+        if (vertices[i].y < min.y) min.y = vertices[i].y;
+    }
+    return min;
+}
+
+vector get_max(vector vertices[4]) {
+    vector max = vertices[0];
+    for (int i = 1; i < 4; i++) {
+        if (vertices[i].x > max.x) max.x = vertices[i].x;
+        if (vertices[i].y > max.y) max.y = vertices[i].y;
+    }
+    return max;
+}
+
+
+bool equal(vector a, vector b) {
+    const float eps = 0.001f;
+    return fabsf(a.x - b.x) < eps && fabsf(a.y - b.y) < eps;
+}
+
+// Furthest point in a given direction from a polygon
+vector furthest_point(vector vertices[4], vector dir) {
+    float best_dot = -__FLT_MAX__;
+    vector best = vertices[0];
+    for (int i = 0; i < 4; i++) {
+        float d = dot(vertices[i], dir);
+        if (d > best_dot) {
+            best_dot = d;
+            best = vertices[i];
+        }
+    }
+    return best;
+}
+
+// Minkowski support function
+vector support(vector vertsA[4], vector vertsB[4], vector dir) {
+    vector pointA = furthest_point(vertsA, dir);
+    vector pointB = furthest_point(vertsB, (vector){ -dir.x, -dir.y });
+    return subtract(pointA, pointB);
 }
 
 bool line_case(Convex *convex, vector *direction) {
-  // Let A = simplex[1] (newest), B = simplex[0] (older)
+  vector A = convex->points[1]; // Newest point
+  vector B = convex->points[0];
 
-  vector AB = subtract(convex->points[0], convex->points[1]);
-  vector AO = subtract((vector){0.f, 0.f, 0.f}, convex->points[1]);
+  vector AB = subtract(B, A);
+  vector AO = subtract((vector){0.f, 0.f}, A);
 
-  // Perpendicular to AB, toward origin
   vector ABperp = tripleCross2D(AB, AO);
-  // Update direction
-  *direction = ABperp;
 
-  // Keep only A and B in the simplex
+  // Fallback if ABperp is too small
+  if (vectorLength(ABperp) < 0.001f) {
+    ABperp = (vector){-AB.y, AB.x}; // Perpendicular fallback
+  }
+
+  normalize(&ABperp);
+  *direction = ABperp;
 
   return false;
 }
+
+
 bool triangle_case(Convex *convex, vector *direction) {
   vector A = convex->points[2]; // newest
   vector B = convex->points[1];
@@ -60,7 +102,10 @@ bool triangle_case(Convex *convex, vector *direction) {
   vector ACperp = tripleCross2D(AC, AO);
 
   if (dot(ABperp, AO) > 0.f) {
-    // Origin is outside AB
+    if (vectorLength(ABperp) < 0.001f) {
+      ABperp = (vector){-AB.y, AB.x};
+    }
+    normalize(&ABperp);
     convex->points[0] = B;
     convex->points[1] = A;
     convex->side_counter--;
@@ -69,7 +114,10 @@ bool triangle_case(Convex *convex, vector *direction) {
   }
 
   if (dot(ACperp, AO) > 0.f) {
-    // Origin is outside AC
+    if (vectorLength(ACperp) < 0.001f) {
+      ACperp = (vector){-AC.y, AC.x};
+    }
+    normalize(&ACperp);
     convex->points[0] = C;
     convex->points[1] = A;
     convex->side_counter--;
@@ -88,74 +136,53 @@ bool handle_simplex(Convex *convex, vector *direction) {
   return triangle_case(convex, direction);
 }
 
-bool gjk_collision(Player *player, Tile *tiles, Convex *out_convex) {
-  Convex convex;
-  create_convex(&convex);
-
-  vector origin = {0.f, 0.f};
-
-  vector direction = (vector){1.f, 0.f};
-  convex.points[convex.side_counter++] =
-      support(player->vertices, tiles->vertices, direction);
-
-  direction = subtract(origin, convex.points[0]);
-
-  int iterations = 0;
-  int max_iterations = 25;
-
-  while (true) {
-    if (++iterations > max_iterations)
-      return false;
-
-    vector B = support(player->vertices, tiles->vertices, direction);
-    printf("support() = (%.2f, %.2f), dir = (%.2f, %.2f)\n", B.x, B.y,
-           direction.x, direction.y);
-
-    printf("player vertices:\n");
-    for (int i = 0; i < 4; i++) {
-      printf("  V%d: (%.2f, %.2f)\n", i, player->vertices[i].x,
-             player->vertices[i].y);
+bool is_duplicate(Convex *convex, vector pt) {
+    for (int i = 0; i < convex->side_counter; i++) {
+        if (equal(convex->points[i], pt)) return true;
     }
-
-    if (dot(B, direction) < 0) {
-      return false;
-    }
-
-    convex.points[convex.side_counter++] = B;
-
-    if (convex.side_counter > 3) {
-      // rotate points to keep last 3
-      convex.points[0] = convex.points[1];
-      convex.points[1] = convex.points[2];
-      convex.points[2] = B;
-      convex.side_counter = 3;
-    }
-
-    if (handle_simplex(&convex, &direction)) {
-      // Ensure triangle for EPA (if only 2 points exist, generate 3rd)
-      if (convex.side_counter == 2) {
-        vector A = convex.points[1];
-        vector B = convex.points[0];
-        vector AB = subtract(B, A);
-        vector perp = (vector){-AB.y, AB.x};
-        normalize(&perp);
-
-        vector C = support(player->vertices, tiles->vertices, perp);
-        convex.points[2] = C;
-        convex.side_counter = 3;
-      }
-
-      printf("Final GJK simplex (%d points):\n", convex.side_counter);
-      for (int i = 0; i < convex.side_counter; i++) {
-        printf("  P%d: (%.2f, %.2f)\n", i, convex.points[i].x,
-               convex.points[i].y);
-      }
-
-      memcpy(out_convex, &convex, sizeof(Convex));
-      return true;
-    }
-  }
+    return false;
 }
+
+
+bool gjk_collision(Player *player, Tile *tile, Convex *out_convex) {
+    Convex simplex;
+    create_convex(&simplex);
+    vector dir = (vector){1.f, 0.f};  // Initial direction
+    vector a = support(player->vertices, tile->vertices, dir);
+    simplex.points[simplex.side_counter++] = a;
+    dir = (vector){-a.x, -a.y}; // towards origin
+
+    const int max_iter = 25;
+    for (int iter = 0; iter < max_iter; iter++) {
+        vector b = support(player->vertices, tile->vertices, dir);
+
+        if (dot(b, dir) < 0.f || is_duplicate(&simplex, b)) {
+            return false; // No collision or repeated point
+        }
+
+        // Add new point
+        if (simplex.side_counter >= MAX_POINTS)
+            return false; // Overflow guard
+
+        simplex.points[simplex.side_counter++] = b;
+
+        // Maintain at most 3 points (rotate in)
+        if (simplex.side_counter > 3) {
+            simplex.points[0] = simplex.points[1];
+            simplex.points[1] = simplex.points[2];
+            simplex.points[2] = b;
+            simplex.side_counter = 3;
+        }
+
+        if (handle_simplex(&simplex, &dir)) {
+            *out_convex = simplex;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 Edge find_closest(Convex convex) {
   Edge edge = {0};
@@ -226,9 +253,20 @@ bool epa(Player *player, Tile *tile, Convex convex, Edge *out_edge) {
 void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
   bool grounded = false;
 
-  for (int x = 0; x < tiles_count; x++) {
-    Convex *convex = malloc(sizeof(Convex));
-    if (gjk_collision(player, tiles[x], convex)) {
+
+    for (int x = 0; x < tiles_count; x++) {
+  vector player_min = get_min(player->vertices);
+    vector player_max = get_max(player->vertices);
+        Tile *tile = tiles[x];
+        vector tile_min = get_min(tile->vertices);
+        vector tile_max = get_max(tile->vertices);
+
+        if (!aabb_overlap(player_min, player_max, tile_min, tile_max)) {
+            continue; // Skip faraway tiles
+        }
+
+        Convex *convex = malloc(sizeof(Convex));
+     if (gjk_collision(player, tiles[x], convex)) {
       Edge edge;
       if (epa(player, tiles[x], *convex, &edge)) {
 

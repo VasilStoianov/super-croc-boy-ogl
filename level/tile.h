@@ -31,14 +31,10 @@ Tile *create_tile_with_pos_and_scale(vector position,vector size) {
   tile->translate = identity();
   tile->size = size; 
   tile->position =  position;
-float hw = size.x * 0.5f;
-float hh = size.y * 0.5f;
-
-tile->vertices[0] = (vector){position.x - hw, position.y - hh};
-tile->vertices[1] = (vector){position.x + hw, position.y - hh};
-tile->vertices[2] = (vector){position.x + hw, position.y + hh};
-tile->vertices[3] = (vector){position.x - hw, position.y + hh};
-
+  tile->vertices[0] = (vector){.x = position.x - size.x,.y = position.y -size.y };
+  tile->vertices[1] = (vector){.x = position.x + size.x,.y = position.y -size.y };
+  tile->vertices[2] = (vector){.x = position.x + size.x,.y = position.y +size.y };
+  tile->vertices[3] = (vector){.x = position.x - size.x,.y = position.y +size.y };
   
   set_tile_translation(&(tile->translate),tile->position);
   scaleMatrix(&(tile->translate),size);
