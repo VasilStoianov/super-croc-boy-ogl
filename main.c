@@ -72,7 +72,6 @@ int main(void) {
   bool debug = false;
                        //   left,width,top, heidht, near,far)
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
-  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
   // render loop
   Camera *camera =create_camera(); 
   set_camera(camera,shader.id);
@@ -94,7 +93,10 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update player
+    
+  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
     updatePlayer(player, shader.id, dt);
+
     applyGravity(player, dt);
 
     check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
