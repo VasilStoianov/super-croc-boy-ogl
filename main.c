@@ -94,16 +94,16 @@ int main(void) {
 
     // update player
     
-  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
     updatePlayer(player, shader.id, dt);
 
+  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
     applyGravity(player, dt);
 
     check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
     // player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
-    set_vec3_uniform(COLOR_RED, shader.id, "inColor");
+    set_vec3_uniform(COLOR_BLUE, shader.id, "inColor");
     // draw player
     draw(VAO, shader.id);
     // draw tile

@@ -63,7 +63,7 @@ vector furtherst_point(vector vertices[4], vector dir) {
 
 vector support(vector rect1_vertices[4], vector rect2_vertices[4], vector dir) {
   vector furthest_point = furtherst_point(rect1_vertices, dir);
-  scale(&dir, -1);
+  scale(&dir, -1.f);
   vector tile_point = furtherst_point(rect2_vertices, dir);
   return subtract(furthest_point, tile_point);
 }
@@ -183,18 +183,7 @@ bool gjk_collision(Player *player, Tile *tiles, Convex *out_convex) {
       convex.side_counter = 3;
     }
     if (handle_simplex(&convex, &direction)) {
-      if (convex.points.length == 2) {
-        vector B = pop(&convex.points);
-        vector A = pop(&convex.points);
-        vector AB = subtract(B, A);
-        vector perp = (vector){-AB.y, AB.x};
-        normalize(&perp);
-        vector C = support(player->vertices, tiles->vertices, perp);
-       push(C,&out_convex->points);
-       push(B,&out_convex->points);       
-       push(A,&out_convex->points);       
-       
-      }
+     
  
       Stack* res = copy_stack(&convex.points);
         
@@ -268,7 +257,7 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
       Edge edge;
       if (epa(player, tiles[x], *convex, &edge)) {
         float depth = fminf(edge.depth, 1.0f);
-        float bias = 0.01f;
+        float bias = 0.001f;
         vector correction = edge.normal;
         scale(&correction, depth + bias);
         addToVector(&player->position, correction);
