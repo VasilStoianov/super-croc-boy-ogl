@@ -1,11 +1,12 @@
 #ifndef __PHYSIC__
 #define __PHYSIC__
 #include "../level/tile.h"
+#include "../structs/aabb.h"
 #include "../structs/minkowski.h"
 #include "../structs/player.h"
 #include "vector.h"
 #include <math.h>
-#define MAX_POINTS 8
+#define MAX_POINTS 16
 
 static const float GRAVITY = 775.f;
 static const int TILE_SIZE = 24;
@@ -19,6 +20,17 @@ void applyGravity(Player *player, float dt) {
   if (!player->onGround) {
     player->velocity.y += GRAVITY * dt;
   }
+}
+
+/* perpendicular that points toward 'to' */
+static inline vector perpToward(vector edge, vector to) {
+  /* left-hand perp of edge */
+  vector p = (vector){-edge.y, edge.x};
+  if (dot(p, to) < 0) { /* wrong side? flip it */
+    p.x = -p.x;
+    p.y = -p.y;
+  }
+  return p;
 }
 
 bool aabb_overlap(vector min1, vector max1, vector min2, vector max2) {
@@ -49,9 +61,10 @@ vector get_max(vector vertices[4]) {
 }
 
 vector furtherst_point(vector vertices[4], vector dir) {
-  float best_dot = -__FLT_MAX__;
-  vector best;
-  for (int x = 0; x < 4; x++) {
+  float best_dot = dot(vertices[0], dir); // Start with first vertex
+  vector best = vertices[0];
+
+  for (int x = 1; x < 4; x++) {
     float d = dot(vertices[x], dir);
     if (d > best_dot) {
       best = vertices[x];
@@ -62,139 +75,107 @@ vector furtherst_point(vector vertices[4], vector dir) {
 }
 
 vector support(vector rect1_vertices[4], vector rect2_vertices[4], vector dir) {
-  vector furthest_point = furtherst_point(rect1_vertices, dir);
-  scale(&dir, -1.f);
-  vector tile_point = furtherst_point(rect2_vertices, dir);
-  return subtract(furthest_point, tile_point);
+  vector a = furtherst_point(rect1_vertices, dir);
+
+  vector neg_dir = dir;
+  scale(&neg_dir, -1.f);
+
+  vector b = furtherst_point(rect2_vertices, neg_dir);
+  return subtract(a, b);
 }
 
-bool line_case(Convex *convex, vector *direction) {
+static bool handleLine(Stack *simplex, vector *dir) {
+  /* A = last pushed, B = previous */
+  vector A = simplex->data[simplex->length - 1];
+  vector B = simplex->data[simplex->length - 2];
 
-  Stack *stack = copy_stack(&convex->points);
+  vector AB = subtract(B, A);
+  vector AO = negate(A);
 
-  vector A = pop(stack);
-  vector B = pop(stack);
-
-  vector AB = subtract(A, B);
-  vector AO = subtract((vector){0.f, 0.f}, A);
-  *direction = tripleCross2D(AB, AO);
-  // free(stack->data);
-  free(stack->data);
-  free(stack);
-
-  return false;
+  *dir = perpToward(AB, AO);
+  return false; /* still need another point */
 }
 
-bool triangle_case(Convex *convex, vector *direction) {
-  Stack *conv_stack = copy_stack(&convex->points);
-  if (!conv_stack) return false;
+static bool handleTriangle(Stack *simplex, vector *dir) {
+  vector A = simplex->data[2];
+  vector B = simplex->data[1];
+  vector C = simplex->data[0];
 
-  Stack res = {0};
-  res.data = malloc(sizeof(vector) * convex->points.capacity);
-  res.capacity = convex->points.capacity;
-  res.length = 0;
-
-  vector C = pop(conv_stack);
-  vector B = pop(conv_stack);
-  vector A = pop(conv_stack);
-  vector AO = subtract((vector){0.f, 0.f}, A);
+  vector AO = negate(A);
   vector AB = subtract(B, A);
   vector AC = subtract(C, A);
 
-  vector ABperp = tripleCross2D(AB, AO);
-  vector ACperp = tripleCross2D(AC, AO);
-
-  if (dot(ABperp, AO) > 0.f) {
-    push(B, &res);
-    push(A, &res);
-    *direction = ABperp;
-    normalize(direction);
-
-    // Replace old stack with new one
-    free(convex->points.data);
-    convex->points = res;
-
-    free(conv_stack->data);
-    free(conv_stack);
+  /* test edge AB */
+  vector ABperp = perpToward(AB, AC);
+  if (dot(ABperp, AO) > 0) {
+    /* keep A,B  (drop C) */
+    simplex->data[0] = B;
+    simplex->data[1] = A;
+    simplex->length = 2;
+    *dir = ABperp;
     return false;
   }
 
-  if (dot(ACperp, AO) > 0.f) {
-    push(C, &res);
-    push(A, &res);
-    *direction = ACperp;
-
-    normalize(direction);
-    free(convex->points.data);
-    convex->points = res;
-
-    free(conv_stack->data);
-    free(conv_stack);
+  /* test edge AC */
+  vector ACperp = perpToward(AC, AB);
+  if (dot(ACperp, AO) > 0) {
+    /* keep A,C  (drop B) */
+    simplex->data[0] = C;
+    simplex->data[1] = A;
+    simplex->length = 2;
+    *dir = ACperp;
     return false;
   }
 
-  free(res.data); // wasn't used
-  free(conv_stack->data);
-  free(conv_stack);
+  /* origin is inside the triangle */
   return true;
 }
 
-
-
-bool handle_simplex(Convex *convex, vector *direction) {
-  if (convex->points.length <= 2) {
-    return line_case(convex, direction);
-  }
-  return triangle_case(convex, direction);
+static bool handleSimplex(Stack *simplex, vector *dir) {
+  return simplex->length == 2 ? handleLine(simplex, dir)
+                              : handleTriangle(simplex, dir);
 }
 
-bool gjk_collision(Player *player, Tile *tiles, Convex *out_convex) {
-  Convex convex;
-  create_convex(&convex);
-  vector origin = {0.f, 0.f};
-  vector direction = (vector){1.f, 0.f};
-   vector A = support(player->vertices, tiles->vertices, direction);
-  push(A,&convex.points );
-  direction = subtract(origin,A);
-   normalize(&direction);
-  int iterations = 0;
-  const int max_iterations = 25;
+bool gjk_collision(Player *pl, Tile *ti, Convex *out) {
+  vector dir = (vector){1, 0};
+  Stack simplex;
+  create_stack(&simplex);
 
-  while (true) {
-    if (++iterations > max_iterations)
+  /* --- first point --- */
+  push(support(pl->vertices, ti->vertices, dir), &simplex);
+  dir = negate(simplex.data[0]);
+
+  for (int iter = 0; iter < 40; ++iter) {
+    /* 1. get next support point */
+    vector P = support(pl->vertices, ti->vertices, dir);
+
+    /* 2. fail-fast gate */
+    if (dot(P, dir) <= 0) {
+      free(simplex.data);
       return false;
-    vector B = support(player->vertices, tiles->vertices, direction);
-
-    for (int i = 0; i < convex.side_counter; ++i) {
-      if (equal(convex.points.data[i], B))
-        return false; // prevent duplicates
     }
-    if (dot(B, direction) < 0)
-      return false;
 
-    push(B,&convex.points);
+    /* 3. skip exact duplicates (precision glitches) */
+    bool dup = false;
+    for (int i = 0; i < simplex.length; i++)
+      if (equal(simplex.data[i], P)) {
+        dup = true;
+        break;
+      }
+    if (dup)
+      continue;
 
-    if (convex.points.length > 3) {
-
-      convex.points.data[0] = convex.points.data[1];
-      convex.points.data[1] = convex.points.data[2];
-      convex.points.data[2] = B;
-      convex.points.length = 3;
-      convex.side_counter = 3;
-    }
-    if (handle_simplex(&convex, &direction)) {
-     
- 
-      Stack* res = copy_stack(&convex.points);
-        
-      out_convex->points = *res;
-       out_convex->side_counter = convex.side_counter;
-       return true;
+    /* 4. add & test simplex */
+    push(P, &simplex);
+    if (handleSimplex(&simplex, &dir)) {
+      /* success – copy simplex for EPA */
+      out->points = *copy_stack(&simplex);
+      out->side_counter = out->points.length;
+      return true;
     }
   }
-
-  free(convex.points.data);
-  return false;
+  free(simplex.data);
+  return false; /* exceeded iteration budget */
 }
 
 Edge find_closest(Convex convex) {
@@ -231,10 +212,12 @@ bool epa(Player *player, Tile *tile, Convex convex, Edge *out_edge) {
     if ((d - edge.depth) < tolerance) {
       out_edge->depth = d;
       out_edge->normal = edge.normal;
+      printf("Edge norma; %f %f depth %f \n", edge.normal.x, edge.normal.y,
+             edge.depth);
       return true;
     }
     int insert_index = edge.second;
-     add_value(&convex.points,sup,insert_index);
+    add_value(&convex.points, sup, insert_index);
   }
   return false;
 }
@@ -246,16 +229,28 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
 
   for (int x = 0; x < tiles_count; x++) {
     Tile *tile = tiles[x];
-    vector tile_min = get_min(tile->vertices);
-    vector tile_max = get_max(tile->vertices);
-    if (!aabb_overlap(player_min, player_max, tile_min, tile_max))
-      continue;
+    // vector tile_min = get_min(tile->vertices);
+    // vector tile_max = get_max(tile->vertices);
+    // if (!aabb_overlap(player_min, player_max, tile_min, tile_max))
+    //   continue;
+
+    // printf("\nTile #%d\n", x);
+    // for (int i = 0; i < 4; i++) {
+    //   printf("  TILE vertex %d: (%f, %f)\n", i, tile->vertices[i].x,
+    //          tile->vertices[i].y);
+    // }
+    // for (int i = 0; i < 4; i++) {
+    //   printf("  PLAYER vertex %d: (%f, %f)\n", i, player->vertices[i].x,
+    //          player->vertices[i].y);
+    // }
 
     Convex *convex = malloc(sizeof(Convex));
     create_stack(&convex->points);
-    if (gjk_collision(player, tiles[x], convex)) {
+    if (gjk_collision(player, tile, convex)) {
+      printf("Collision\n");
       Edge edge;
-      if (epa(player, tiles[x], *convex, &edge)) {
+      if (epa(player, tile, *convex, &edge)) {
+        printf("EPA\n");
         float depth = fminf(edge.depth, 1.0f);
         float bias = 0.001f;
         vector correction = edge.normal;
@@ -274,6 +269,171 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
     free(convex);
   }
   player->onGround = grounded;
+}
+
+bool aabb_overlap_x(AABB a, AABB b) {
+
+  return !(a.max.x < b.min.x || a.min.x > b.max.x);
+}
+
+bool aabb_overlap_y(AABB a, AABB b) {
+  return !(a.max.y < b.min.y || a.min.y > b.max.y);
+}
+
+void check_collision_player_tile_x(Player *player, Tile *tile) {
+
+  if (!aabb_overlap_y(player->aabb, tile->aabb))
+    return; // only resolve if overlapping in Y
+  if (!aabb_overlap_x(player->aabb, tile->aabb))
+    return;
+
+  update_aabb_player(player);
+  if (player->velocity.x > 0.f) {
+    printf("Colliding on X (right)\n");
+    // player->position.x -= player->velocity.x * dt;
+    // player->velocity.x = 0.f;
+    player->position.x = (tile->aabb.min.x - player->aabb.min.x) * 0.5f;
+
+  } else if (player->velocity.x < 0.f) {
+    printf("Colliding on X (left)\n");
+    // player->position.x -= player->velocity.x * dt;
+    // player->velocity.x = 0.f;
+
+  }
+}
+
+void check_collsion_player_tile_y(Player *player, Tile *tile,
+                                  bool *grounded_out) {
+  if (!aabb_overlap_x(player->aabb, tile->aabb))
+    return;
+  if (!aabb_overlap_y(player->aabb, tile->aabb))
+    return;
+
+  float playerHalfH = (player->aabb.max.y - player->aabb.min.y) * 0.5f;
+
+  update_aabb_player(player);
+  if (player->velocity.y > 0.f) {
+    // Moving down — landed on tile
+    player->position.y = tile->aabb.min.y - playerHalfH;
+    player->velocity.y = 0.f;
+    player->onGround = true;
+    if (grounded_out)
+      *grounded_out = true;
+  } else if (player->velocity.y < 0.f) {
+    // Moving up — hit bottom of tile above
+    player->position.y = tile->aabb.max.y + playerHalfH;
+    player->velocity.y = 0.f;
+  }
+}
+
+
+// Call this each frame, after you’ve set p->velocity by input+gravity,
+// and before you render.
+  // 1) Precompute half-sizes once
+void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
+    // 1) Precompute half-sizes once
+    float halfW = p->size.x * 0.5f;
+    float halfH = p->size.y * 0.5f;
+
+    // ----- MOVE ALONG X -----
+    p->position.x += p->velocity.x * dt;
+
+    for (int i = 0; i < tileCount; i++) {
+        Tile *t = tiles[i];
+
+          t->color = COLOR_BLACK;
+        float tHalfW = t->size.x * 0.5f;
+        float tHalfH = t->size.y * 0.5f;
+
+        // 2) Compute AABB extents for player and tile
+        float pL = p->position.x - halfW;
+        float pR = p->position.x + halfW;
+        float pT = p->position.y - halfH;
+        float pB = p->position.y + halfH;
+
+        float tL = t->position.x - tHalfW;
+        float tR = t->position.x + tHalfW;
+        float tT = t->position.y - tHalfH;
+        float tB = t->position.y + tHalfH;
+
+        // 3) Broad‐phase overlap test
+        if (pR <= tL || pL >= tR || pB <= tT || pT >= tB)
+            continue;
+
+        // 4) Compute penetration depths on each axis
+        float overlapX = (p->velocity.x > 0) 
+            ? (pR - tL)   // moving right: how far past tile’s left side?
+            : (tR - pL);  // moving left: how far past tile’s right side?
+
+        // Y‐penetration even though we didn’t move Y yet—used to compare depths:
+        float overlapY = (p->velocity.y > 0) 
+            ? (pB - tT)   // moving down: how far into tile’s top?
+            : (tB - pT);  // moving up: into tile’s bottom?
+
+        // 5) Only resolve X if it’s the smaller penetration
+        if (overlapX < overlapY) {
+          t->color = COLOR_YELOOW;
+            if (p->velocity.x > 0) {
+                // push player back to the left of the tile
+                p->position.x -= overlapX;
+            } else if (p->velocity.x < 0) {
+                // push player back to the right of the tile
+                p->position.x += overlapX;
+            }
+            // damp a bit of vertical momentum on a glancing hit
+            p->velocity.y *= 0.8f;
+            p->velocity.x = 0;
+        }
+    }
+
+    // ----- MOVE ALONG Y -----
+    p->position.y += p->velocity.y * dt;
+    bool grounded = false;
+
+    for (int i = 0; i < tileCount; i++) {
+        Tile *t = tiles[i];
+        float tHalfW = t->size.x * 0.5f;
+        float tHalfH = t->size.y * 0.5f;
+
+        float pL = p->position.x - halfW;
+        float pR = p->position.x + halfW;
+        float pT = p->position.y - halfH;
+        float pB = p->position.y + halfH;
+
+        float tL = t->position.x - tHalfW;
+        float tR = t->position.x + tHalfW;
+        float tT = t->position.y - tHalfH;
+        float tB = t->position.y + tHalfH;
+
+        if (pR <= tL || pL >= tR || pB <= tT || pT >= tB)
+            continue;
+
+        float overlapX = (p->velocity.x > 0) 
+            ? (pR - tL) 
+            : (tR - pL);
+
+        float overlapY = (p->velocity.y > 0) 
+            ? (pB - tT) 
+            : (tB - pT);
+
+        // Only resolve Y if it’s the smaller penetration
+        if (overlapY < overlapX) {
+          t->color = COLOR_YELOOW;
+            if (p->velocity.y > 0) {
+                // landing on top of tile
+                p->position.y -= overlapY;
+                p->velocity.y = 0;
+                grounded = true;
+            } else if (p->velocity.y < 0) {
+                // hitting ceiling
+                p->position.y += overlapY;
+                p->velocity.y = 0;
+            }
+        }
+    }
+
+    // 6) Update grounded state
+    p->onGround = grounded;
 }
 
 #endif

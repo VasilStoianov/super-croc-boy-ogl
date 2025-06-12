@@ -1,15 +1,15 @@
 #ifndef __player__
 #define __player__
-#include "../lib/glad.h"
 #include "../input.h"
+#include "../lib/glad.h"
 #include "../math/matrix.h"
 #include "../math/vector.h"
 #include "../shaders/shader.h"
+#include "../structs/aabb.h"
 #include "../utils.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
 
 typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
 
@@ -25,6 +25,7 @@ typedef struct Player {
   Direction action[LAST_DIR];
   mat4f translation;
   bool jump;
+  AABB aabb;
 
 } Player;
 
@@ -41,13 +42,25 @@ Player *createPlayer() {
   p->jump = false;
   p->size = (vector){.x = 75.f, .y = 75.f, .z = 0.f};
   p->position.x = 600.f;
-  p->position.y = 65.f ;
+  p->position.y = 65.f;
 
-  p->vertices[0] = (vector){.x = p->position.x - p->size.x,.y = p->position.y -p->size.y };
-  p->vertices[1] = (vector){.x = p->position.x + p->size.x,.y = p->position.y -p->size.y };
-  p->vertices[2] = (vector){.x = p->position.x + p->size.x,.y = p->position.y +p->size.y };
-  p->vertices[3] = (vector){.x = p->position.x - p->size.x,.y = p->position.y +p->size.y };
+  vector half_size = {.x = p->size.x / 2.f, .y = p->size.y / 2.f};
+  vector min = {.x = p->position.x - half_size.x,
+                .y = p->position.y - half_size.y};
 
+  vector max = {.x = p->position.x + half_size.x,
+                .y = p->position.y + half_size.y};
+
+  p->vertices[0] = (vector){.x = p->position.x - p->size.x *0.5f,
+                                 .y = p->position.y - p->size.y*0.5f};
+  p->vertices[1] = (vector){.x = p->position.x + p->size.x*0.5f,
+                                 .y = p->position.y - p->size.y*0.5f};
+  p->vertices[2] = (vector){.x = p->position.x + p->size.x*0.5f,
+                                 .y = p->position.y + p->size.y*0.5f};
+  p->vertices[3] = (vector){.x = p->position.x - p->size.x*0.5f,
+                                 .y = p->position.y + p->size.y*0.5f};
+
+  set_aabb(&(p->aabb), min, max);
   return p;
 }
 
@@ -61,15 +74,25 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
 
   player->position.x += player->velocity.x * dt;
   player->position.y += player->velocity.y * dt;
-  
-  player->vertices[0] = (vector){.x = player->position.x - player->size.x,.y = player->position.y -player->size.y };
-  player->vertices[1] = (vector){.x = player->position.x + player->size.x,.y = player->position.y -player->size.y };
-  player->vertices[2] = (vector){.x = player->position.x + player->size.x,.y = player->position.y +player->size.y };
-  player->vertices[3] = (vector){.x = player->position.x - player->size.x,.y = player->position.y +player->size.y };
+  vector half_size = {.x = player->size.x / 2.f, .y = player->size.y / 2.f};
+  vector min = {.x = player->position.x - half_size.x,
+                .y = player->position.y - half_size.y};
 
+  vector max = {.x = player->position.x + half_size.x,
+                .y = player->position.y + half_size.y};
+  player->vertices[0] = (vector){.x = player->position.x - player->size.x *0.5f,
+                                 .y = player->position.y - player->size.y*0.5f};
+  player->vertices[1] = (vector){.x = player->position.x + player->size.x*0.5f,
+                                 .y = player->position.y - player->size.y*0.5f};
+  player->vertices[2] = (vector){.x = player->position.x + player->size.x*0.5f,
+                                 .y = player->position.y + player->size.y*0.5f};
+  player->vertices[3] = (vector){.x = player->position.x - player->size.x*0.5f,
+                                 .y = player->position.y + player->size.y*0.5f};
+
+  set_aabb(&(player->aabb), min, max);
 
   setTranslation(&(player->translation), player->position);
-  set_matrix_uniform(player->translation, prograId,"translation");
+  set_matrix_uniform(player->translation, prograId, "translation");
 }
 
 void scalePlayer(Player *player, vector scaleVec) {
@@ -81,9 +104,22 @@ void set_player_action(Player *player) {
       input_key_held(GLFW_KEY_LEFT) || input_key_pressed(GLFW_KEY_LEFT);
   player->action[RIGHT] =
       input_key_held(GLFW_KEY_RIGHT) || input_key_pressed(GLFW_KEY_RIGHT);
-  player->action[UP] = input_key_held(GLFW_KEY_UP) ||  input_key_pressed(GLFW_KEY_UP);
+  player->action[UP] =
+      input_key_held(GLFW_KEY_UP) || input_key_pressed(GLFW_KEY_UP);
   player->action[DOWN] =
       input_key_held(GLFW_KEY_DOWN) || input_key_pressed(GLFW_KEY_DOWN);
+}
+
+void update_aabb_player(Player *player) {
+
+  vector half_size = {.x = player->size.x / 2.f, .y = player->size.y / 2.f};
+  vector min = {.x = player->position.x - half_size.x,
+                .y = player->position.y - half_size.y};
+
+  vector max = {.x = player->position.x + half_size.x,
+                .y = player->position.y + half_size.y};
+
+  set_aabb(&(player->aabb), min, max);
 }
 
 void handlePlayerMovement(Player *player) {

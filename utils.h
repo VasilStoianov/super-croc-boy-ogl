@@ -10,6 +10,7 @@
 #define COLOR_YELOOW ((vector){255,255,0}) 
 #define COLOR_GRAY ((vector){128,128,128}) 
 
+float dt = 1.0 / 60.f;
 
 float clamp(float value, float min, float max) {
   if (value > max)

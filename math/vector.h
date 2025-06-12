@@ -59,7 +59,7 @@ float vectorLength(vector a) {
   return sqrtf((a.x * a.x) + (a.y * a.y) + (a.z * a.z));
 }
 
-float dot(vector a, vector b) { return a.x * b.x + a.y + b.y + a.z * b.z; }
+float dot(vector a, vector b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 
 void normalize(vector *v) {
 float len = sqrtf(v->x * v->x + v->y * v->y);
@@ -79,16 +79,11 @@ vector cross(vector a, vector b) {
   res.z = a.x * b.y - a.y * b.x;
   return res;
 }
-
+vector negate(vector v) {
+  return (vector){ -v.x, -v.y };
+}
 vector tripleCross2D(vector a, vector b) {
-    float dot_a_b = a.x * b.x + a.y * b.y;
-    float dot_a_a = a.x * a.x + a.y * a.y;
-
-    // result = b - a * (dot(b, a) / dot(a, a))
-    float scalar = dot_a_b / dot_a_a;
-    return (vector){
-        b.x - a.x * scalar,
-        b.y - a.y * scalar
-    };
+    float z = a.x * b.y - a.y * b.x;
+    return (vector){ -a.y * z, a.x * z };
 }
 

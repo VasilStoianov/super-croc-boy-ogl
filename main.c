@@ -1,23 +1,22 @@
 #include "game.h"
-#include "lib/glad.h"
 #include "input.h"
 #include "level/levels.h"
 #include "level/tile.h"
-#include "structs/player.h"
+#include "lib/glad.h"
+#include "math/camera.h"
+#include "math/physic.h"
 #include "shaders/shader.h"
 #include "stdbool.h"
+#include "structs/player.h"
 #include "vertices/vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "math/camera.h"
-#include "math/physic.h"
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
-float dt = 1.0 / 60.f;
 float cameraX = 1.f;
 bool shakeThecamera = false;
 Player *player = {0};
@@ -70,11 +69,11 @@ int main(void) {
   double lastTime = time;
   int fps = 0;
   bool debug = false;
-                       //   left,width,top, heidht, near,far)
+  //   left,width,top, heidht, near,far)
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
   // render loop
-  Camera *camera =create_camera(); 
-  set_camera(camera,shader.id);
+  Camera *camera = create_camera();
+  set_camera(camera, shader.id);
   while (!glfwWindowShouldClose(window)) {
     camera->startShaking = shakeThecamera;
     time = glfwGetTime();
@@ -93,28 +92,39 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update player
-    
+
+    applyGravity(player, dt);
     updatePlayer(player, shader.id, dt);
 
-  scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
-    applyGravity(player, dt);
+    scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
 
-    check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
-    // player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
+    // check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
+     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
-    set_vec3_uniform(COLOR_BLUE, shader.id, "inColor");
+    set_vec3_uniform(COLOR_RED, shader.id, "inColor");
     // draw player
     draw(VAO, shader.id);
     // draw tile
+
+    // for (int x = 0; x < lvl->tiles_count; x++) {
+    //   check_collision_player_tile_x(player, lvl->tiles[x]);
+    // }
+
+    // bool grounded_out = false;
+    // for (int x = 0; x < lvl->tiles_count; x++) {
+    //   check_collsion_player_tile_y(player, lvl->tiles[x],&grounded_out);
+    // }
+    // player->onGround = grounded_out;
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
+
       set_matrix_uniform(tile->translate, shader.id, "translation");
 
-      set_vec3_uniform(COLOR_BLACK, shader.id, "inColor");
+      set_vec3_uniform(tile->color, shader.id, "inColor");
       draw(VAO, shader.id);
     }
-    move_camera(player,camera,shader.id,lvl,dt);
+    move_camera(player, camera, shader.id, lvl, dt);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -138,7 +148,7 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
   }
-  if(glfwGetKey(window,GLFW_KEY_SPACE) == GLFW_PRESS){
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
     shakeThecamera = !shakeThecamera;
   }
   input_update();
