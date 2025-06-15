@@ -52,10 +52,17 @@ int main(void) {
   // load shader
   char filePath[10] = "shaders/";
   Shader shader = createShader(filePath);
-
+  char textFilePath[25] = "shaders/texture/";
+  Shader text_shader = createShader(textFilePath);
+  char *pic_path = "textures/run/frame-1.png";
   // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
+
+  unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0, texture;
+  ;
   configVertices(&VBO, &VAO, &EBO);
+  config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, pic_path, text_shader.id,
+                          &texture);
 
   // create player
   player = createPlayer();
@@ -92,19 +99,19 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update player
-
+    glUseProgram(shader.id);
     applyGravity(player, dt);
     updatePlayer(player, shader.id, dt);
 
     scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
 
     // check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
-     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
+    player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
     set_vec3_uniform(COLOR_RED, shader.id, "inColor");
     // draw player
-    draw(VAO, shader.id);
+    draw_square(VAO, shader.id);
     // draw tile
 
     // for (int x = 0; x < lvl->tiles_count; x++) {
@@ -122,8 +129,12 @@ int main(void) {
       set_matrix_uniform(tile->translate, shader.id, "translation");
 
       set_vec3_uniform(tile->color, shader.id, "inColor");
-      draw(VAO, shader.id);
+      draw_square(VAO, shader.id);
     }
+    set_matrix_uniform(player->translation, text_shader.id, "translation");
+    set_matrix_uniform(orthographic, text_shader.id, "projection");
+    draw_texture(texture, VAO_T, text_shader.id);
+
     move_camera(player, camera, shader.id, lvl, dt);
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -4,8 +4,11 @@
 #include "../math/vector.h"
 #include "../structs/aabb.h"
 #include "../utils.h"
+
+#include "../lib/glad.h"
 #include <stdlib.h>
 
+#include <GLFW/glfw3.h>
 typedef struct {
   vector position;
   mat4f translate;

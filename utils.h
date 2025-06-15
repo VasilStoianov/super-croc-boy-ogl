@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include "math/vector.h"
+#include <stdio.h>
 
 #define COLOR_BLACK ((vector){.x = 0,.y = 0,.z=0})
 #define COLOR_WHITE ((vector){255,255,255})
