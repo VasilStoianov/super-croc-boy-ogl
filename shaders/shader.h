@@ -106,14 +106,16 @@ Shader createShader(char *filePath) {
 }
 
 void set_matrix_uniform(mat4f matrix, unsigned int shaderId,char * uniform_name) {
-  GLint location = glGetUniformLocation(shaderId, uniform_name);
+ 
   glUseProgram(shaderId);
+  GLint location = glGetUniformLocation(shaderId, uniform_name);
   glUniformMatrix4fv(location,1,GL_TRUE,(const float*)&matrix.m);
 }
 
 void set_vec3_uniform(vector vec,unsigned int shaderId,char* uniform_name){
-  GLint location = glGetUniformLocation(shaderId,uniform_name);
+  
   glUseProgram(shaderId);
+  GLint location = glGetUniformLocation(shaderId,uniform_name);
   glUniform3f(location,vec.x,vec.y,vec.z);
 }
 

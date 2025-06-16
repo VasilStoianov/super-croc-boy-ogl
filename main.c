@@ -111,18 +111,9 @@ int main(void) {
 
     set_vec3_uniform(COLOR_RED, shader.id, "inColor");
     // draw player
-    draw_square(VAO, shader.id);
+    // draw_square(VAO, shader.id);
     // draw tile
 
-    // for (int x = 0; x < lvl->tiles_count; x++) {
-    //   check_collision_player_tile_x(player, lvl->tiles[x]);
-    // }
-
-    // bool grounded_out = false;
-    // for (int x = 0; x < lvl->tiles_count; x++) {
-    //   check_collsion_player_tile_y(player, lvl->tiles[x],&grounded_out);
-    // }
-    // player->onGround = grounded_out;
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
 
@@ -131,8 +122,10 @@ int main(void) {
       set_vec3_uniform(tile->color, shader.id, "inColor");
       draw_square(VAO, shader.id);
     }
+
     set_matrix_uniform(player->translation, text_shader.id, "translation");
     set_matrix_uniform(orthographic, text_shader.id, "projection");
+    move_camera(player, camera, text_shader.id, lvl, dt);
     draw_texture(texture, VAO_T, text_shader.id);
 
     move_camera(player, camera, shader.id, lvl, dt);

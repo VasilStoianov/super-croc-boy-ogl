@@ -8,14 +8,20 @@ const float vertices[] = {
 };
 
 const float texture_vertices[] = {
-  -0.5f, -0.5f, 0.0f, 1.0f,1.0f,
-   0.5f, -0.5f, 0.0f, 1.0f ,0.0f,
-   0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-  -0.5f,  0.5f, 0.0f, 0.0f, 1.0f 
+  // x,     y,    z,    u,    v
+  -0.5f, -0.5f, 0.0f, 0.0f, 1.0f,  // Bottom Left
+   0.5f, -0.5f, 0.0f, 1.0f, 1.0f,  // Bottom Right
+   0.5f,  0.5f, 0.0f, 1.0f, 0.0f,  // Top Right
+  -0.5f,  0.5f, 0.0f, 0.0f, 0.0f   // Top Left
 };
 const unsigned int indices[] = {  
     0, 1, 3,   // first triangle
     1, 2, 3    // second triangle
 }; 
  
+const unsigned int indices2[] = {  
+    0, 1, 2,   // first triangle
+    2, 3, 0    // second triangle
+}; 
+
 #endif
