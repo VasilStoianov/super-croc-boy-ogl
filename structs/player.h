@@ -96,6 +96,12 @@ void updatePlayer(Player *player, unsigned int prograId, float dt) {
 }
 
 void scalePlayer(Player *player, vector scaleVec) {
+  if(player->action[LEFT]){
+    scaleVec.x *= -1.f;
+  }
+  else {
+    
+  }
   scaleMatrix(&(player->translation), scaleVec);
 }
 void set_player_action(Player *player) {

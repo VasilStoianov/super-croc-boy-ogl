@@ -54,28 +54,30 @@ int main(void) {
   Shader shader = createShader(filePath);
   char textFilePath[25] = "shaders/texture/";
   Shader text_shader = createShader(textFilePath);
-  char *pic_path[4] = {"textures/run/frame-1.png", "textures/run/frame-2.png" , "textures/run/frame-3.png","textures/run/frame-4.png"};
+  char *pic_path[4] = {"textures/run/frame-1.png", "textures/run/frame-2.png",
+                       "textures/run/frame-3.png", "textures/run/frame-4.png"};
   // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
 
   unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0, texture;
-  ;
+  //load square vertices
   configVertices(&VBO, &VAO, &EBO);
+  
+  //load texture vertices
   config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, text_shader.id);
+  
   Texture text[4];
 
-  for(int x = 0; x<4;x++){
-
-  generate_texture(pic_path[x],&text[x],text_shader.id);
-
+  for (int x = 0; x < 4; x++) {
+    //create texture ID and link it
+    generate_texture(pic_path[x], &text[x], text_shader.id);
   }
-   
+
   // create player
   player = createPlayer();
 
   // create tile
-  // Tile *tile = createTile();
-  Level *lvl = load_leve1();
+  Level *lvl = load_leve1(text_shader.id);
 
   double time = glfwGetTime();
   double lastFrame = 0;
@@ -83,26 +85,25 @@ int main(void) {
   int fps = 0;
   bool debug = false;
   //   left,width,top, heidht, near,far)
+
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
   // render loop
   Camera *camera = create_camera();
   set_camera(camera, shader.id);
+  set_camera(camera,text_shader.id);
 
-int frame = 0;
+  int frame = 0;
+
   while (!glfwWindowShouldClose(window)) {
     camera->startShaking = shakeThecamera;
     time = glfwGetTime();
     fps++;
-     
+
+
+  if (time - lastTime >= .6) 
       frame++;
     // fps update every 1 second
-    if (time - lastTime >= 1.0) {
-      if (debug) {
-        printf("FPS %d\n", fps);
-      }
-      fps = 0;
-      lastTime = time;
-    }
+    update_time(&time, &lastTime, debug, &fps);
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -114,40 +115,40 @@ int frame = 0;
 
     scalePlayer(player, (vector){.x = player->size.x, .y = player->size.y});
 
-    // check_collision_gjk(player,lvl->tiles,lvl->tiles_count);
     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
     set_matrix_uniform(orthographic, shader.id, "projection");
 
     set_vec3_uniform(COLOR_RED, shader.id, "inColor");
-    // draw player
-    // draw_square(VAO, shader.id);
-    // draw tile
 
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
 
-      set_matrix_uniform(tile->translate, shader.id, "translation");
+      set_matrix_uniform(tile->translate, text_shader.id, "translation");
 
-      set_vec3_uniform(tile->color, shader.id, "inColor");
-      draw_square(VAO, shader.id);
+      set_vec3_uniform(tile->color, text_shader.id, "inColor");
+      draw_texture(tile->texture.id,VAO_T,text_shader.id);
     }
 
     set_matrix_uniform(player->translation, text_shader.id, "translation");
     set_matrix_uniform(orthographic, text_shader.id, "projection");
     move_camera(player, camera, text_shader.id, lvl, dt);
-      Texture texture = text[frame];
+    Texture texture = text[frame];
     draw_texture(texture.id, VAO_T, text_shader.id);
 
     move_camera(player, camera, shader.id, lvl, dt);
     glfwSwapBuffers(window);
     glfwPollEvents();
-if(frame>4) frame= 0;
+
+    if (frame > 4)
+      frame = 0;
+
     dt = time - lastFrame;
     if (dt < 0.01 || dt > 0.02) {
       dt = 1.f / 60.f;
     }
     lastFrame = time;
   }
+
   free(player);
   free_leve(lvl);
   glfwTerminate();

@@ -2,8 +2,10 @@
 #define TILE_H
 #include "../math/matrix.h"
 #include "../math/vector.h"
+#include "../structs/texture.h"
 #include "../structs/aabb.h"
 #include "../utils.h"
+#include "../game.h"
 
 #include "../lib/glad.h"
 #include <stdlib.h>
@@ -17,6 +19,7 @@ typedef struct {
   vector vertices[4];
   AABB aabb;
   vector color;
+  Texture texture;
 } Tile;
 
 Tile *createTile() {
@@ -33,7 +36,7 @@ void set_tile_translation(mat4f *tile_matrix, vector position) {
   setTranslation(tile_matrix, position);
 }
 
-Tile *create_tile_with_pos_and_scale(vector position, vector size) {
+Tile *create_tile_with_pos_and_scale(vector position, vector size,char* path, unsigned int shader_id) {
   Tile *tile = (Tile *)malloc(sizeof(Tile));
   tile->translate = identity();
   tile->size = size;
@@ -54,6 +57,8 @@ Tile *create_tile_with_pos_and_scale(vector position, vector size) {
       (vector){.x = position.x + size.x*0.5f, .y = position.y + size.y*0.5f};
   tile->vertices[3] =
       (vector){.x = position.x - size.x*0.5f, .y = position.y +  size.y*0.5f};
+
+  generate_texture(path, &(tile->texture), shader_id);
 
   set_aabb(&(tile->aabb), min, max);
   tile->color = COLOR_BLACK;
