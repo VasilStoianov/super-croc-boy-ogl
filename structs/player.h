@@ -40,7 +40,7 @@ Player *createPlayer() {
   p->translation = identity();
   p->onGround = false;
   p->jump = false;
-  p->size = (vector){.x = 75.f, .y = 75.f, .z = 0.f};
+  p->size = (vector){.x = 75.f, .y = 85.f, .z = 0.f};
   p->position.x = 600.f;
   p->position.y = 65.f;
 

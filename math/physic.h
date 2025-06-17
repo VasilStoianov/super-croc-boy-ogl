@@ -341,7 +341,6 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
     for (int i = 0; i < tileCount; i++) {
         Tile *t = tiles[i];
 
-          t->color = COLOR_BLACK;
         float tHalfW = t->size.x * 0.5f;
         float tHalfH = t->size.y * 0.5f;
 
@@ -372,7 +371,6 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
         // 5) Only resolve X if it’s the smaller penetration
         if (overlapX < overlapY) {
-          t->color = COLOR_YELOOW;
             if (p->velocity.x > 0) {
                 // push player back to the left of the tile
                 p->position.x -= overlapX;
@@ -418,7 +416,6 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
         // Only resolve Y if it’s the smaller penetration
         if (overlapY < overlapX) {
-          t->color = COLOR_YELOOW;
             if (p->velocity.y > 0) {
                 // landing on top of tile
                 p->position.y -= overlapY;

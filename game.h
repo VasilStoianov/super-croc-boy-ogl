@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include "lib/stb_image.h"
+#include "structs/texture.h"
 
 void configVertices(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO) {
 
@@ -36,9 +37,39 @@ void configVertices(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO) {
   glBindVertexArray(0);
 }
 
+void generate_texture(char* image_path, Texture* texture,unsigned int shader_id){
+
+  glGenTextures(1, &(texture->id));
+  glBindTexture(GL_TEXTURE_2D, texture->id);
+  // set the texture wrapping/filtering options (on the currently bound texture
+  // object)
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // load and generate the texture
+  int  nrChannels;
+  
+ stbi_set_flip_vertically_on_load(1);
+  unsigned char *data = stbi_load(image_path, &(texture->width), &(texture->heidth), &nrChannels, 0);
+  if (data) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,texture->width, texture->heidth, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    printf("[ERROR] NO TEXTURE DATA\n");
+  }
+  stbi_image_free(data);
+  glUseProgram(shader_id);
+  glUniform1i(glGetUniformLocation(shader_id, "texture1"), 0);
+}
+
 void config_texture_vertices(unsigned int *VBO, unsigned int *VAO,
-                             unsigned int *EBO, char *image_path,
-                             int shader_id,unsigned int *texture) {
+                             unsigned int *EBO,
+                             int shader_id) {
 
   glGenVertexArrays(1, VAO);
   glGenBuffers(1, VBO);
@@ -59,32 +90,6 @@ void config_texture_vertices(unsigned int *VBO, unsigned int *VAO,
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  glGenTextures(1, texture);
-  glBindTexture(GL_TEXTURE_2D, *texture);
-  // set the texture wrapping/filtering options (on the currently bound texture
-  // object)
-glEnable(GL_BLEND);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // load and generate the texture
-  int width, height, nrChannels;
-  
- stbi_set_flip_vertically_on_load(1);
-  unsigned char *data = stbi_load(image_path, &width, &height, &nrChannels, 0);
-  if (data) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  } else {
-    printf("[ERROR] NO TEXTURE DATA\n");
-  }
-  stbi_image_free(data);
-  glUseProgram(shader_id);
-  glUniform1i(glGetUniformLocation(shader_id, "texture1"), 0);
   // safely unbind
 }
 

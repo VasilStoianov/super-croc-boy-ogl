@@ -54,16 +54,22 @@ int main(void) {
   Shader shader = createShader(filePath);
   char textFilePath[25] = "shaders/texture/";
   Shader text_shader = createShader(textFilePath);
-  char *pic_path = "textures/run/frame-1.png";
+  char *pic_path[4] = {"textures/run/frame-1.png", "textures/run/frame-2.png" , "textures/run/frame-3.png","textures/run/frame-4.png"};
   // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
 
   unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0, texture;
   ;
   configVertices(&VBO, &VAO, &EBO);
-  config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, pic_path, text_shader.id,
-                          &texture);
+  config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, text_shader.id);
+  Texture text[4];
 
+  for(int x = 0; x<4;x++){
+
+  generate_texture(pic_path[x],&text[x],text_shader.id);
+
+  }
+   
   // create player
   player = createPlayer();
 
@@ -81,10 +87,14 @@ int main(void) {
   // render loop
   Camera *camera = create_camera();
   set_camera(camera, shader.id);
+
+int frame = 0;
   while (!glfwWindowShouldClose(window)) {
     camera->startShaking = shakeThecamera;
     time = glfwGetTime();
     fps++;
+     
+      frame++;
     // fps update every 1 second
     if (time - lastTime >= 1.0) {
       if (debug) {
@@ -93,7 +103,6 @@ int main(void) {
       fps = 0;
       lastTime = time;
     }
-
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -126,12 +135,13 @@ int main(void) {
     set_matrix_uniform(player->translation, text_shader.id, "translation");
     set_matrix_uniform(orthographic, text_shader.id, "projection");
     move_camera(player, camera, text_shader.id, lvl, dt);
-    draw_texture(texture, VAO_T, text_shader.id);
+      Texture texture = text[frame];
+    draw_texture(texture.id, VAO_T, text_shader.id);
 
     move_camera(player, camera, shader.id, lvl, dt);
     glfwSwapBuffers(window);
     glfwPollEvents();
-
+if(frame>4) frame= 0;
     dt = time - lastFrame;
     if (dt < 0.01 || dt > 0.02) {
       dt = 1.f / 60.f;
