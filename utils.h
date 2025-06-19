@@ -36,6 +36,7 @@ void print_matrix(mat4f matrix){
 }
 
 void generate_texture(char* image_path, Texture* texture,unsigned int shader_id){
+  texture->id = 0;
 
   glGenTextures(1, &(texture->id));
   glBindTexture(GL_TEXTURE_2D, texture->id);

@@ -9,6 +9,19 @@ typedef struct Stack {
   int length;
 } Stack;
 
+
+unsigned long hash(char* str){
+
+  unsigned long hash = 5381;
+  int c;
+
+  while ((c = *str++)) {
+    hash = ((hash << 5) + hash) + c;
+  }
+
+  return hash;
+}
+
 void push(vector vec, Stack *stack) {
   if (stack->length == stack->capacity / 2) {
     stack->data =
