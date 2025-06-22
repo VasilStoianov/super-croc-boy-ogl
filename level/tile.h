@@ -58,7 +58,7 @@ Tile *create_tile_with_pos_and_scale(vector position, vector size,char* path, un
   tile->vertices[3] =
       (vector){.x = position.x - size.x*0.5f, .y = position.y +  size.y*0.5f};
 
-  generate_texture(path, &(tile->texture), shader_id);
+
 
   set_aabb(&(tile->aabb), min, max);
   tile->color = COLOR_BLACK;

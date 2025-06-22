@@ -7,12 +7,39 @@
 #include "../shaders/shader.h"
 #include "../structs/aabb.h"
 #include "../utils.h"
+#include "animation.h"
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
 typedef enum { RUN, FALL, JUMP, IDLE, LAST_ANIM } State;
+typedef enum Direction { LEFT, RIGHT, UP, DOWN, STOP, LAST_DIR } Direction;
+
+char *print_state(State state) {
+  switch (state) {
+  case RUN: {
+    return "RUN";
+    break;
+  }
+  case FALL: {
+    return "FALL";
+    break;
+  }
+  case JUMP: {
+    return "JUMP";
+    break;
+  }
+  case IDLE: {
+    return "IDLE";
+    break;
+  }
+
+  default: {
+    return "NO STATE";
+    break;
+  }
+  }
+}
 
 typedef struct Player {
 
@@ -25,8 +52,8 @@ typedef struct Player {
   float maxSpeedY;
   bool onGround;
   vector vertices[4];
+  Animation animations[LAST_ANIM];
   Direction action[LAST_DIR];
-  Texture animations[LAST_ANIM][4];
   State state;
   mat4f translation;
   bool jump;
@@ -34,31 +61,14 @@ typedef struct Player {
 
 } Player;
 
-void load_animation(Player *player, int frames, State anim_type, char *path,
-                    unsigned int shader_id) {
-
-  if (frames > 1) {
-
-    char *temp = malloc(strlen(path) + 7);
-    strcpy(temp, path);
-    strcat(temp, "-0.png");
-    int len = strlen(temp);
-    for (int x = 1; x < frames; x++) {
-      temp[strlen(temp) - 5] = 48 + x;
-      generate_texture(temp, &(player->animations[anim_type][x]), shader_id);
-    }
-
-  } else {
-
-    Texture tex = player->animations[anim_type][0];
-    tex.id = 0;
-    generate_texture(path, &tex, shader_id);
-  }
-}
-
 Player *createPlayer() {
 
   Player *p = (Player *)malloc(sizeof(Player));
+
+  for (int x = 0; x < LAST_ANIM; x++) {
+    p->animations[x].current_frame = 0;
+    p->animations[x].frames = 0;
+  }
 
   p->velocity = createZeroVector();
   p->position = createZeroVector();
@@ -71,14 +81,6 @@ Player *createPlayer() {
   p->size = (vector){.x = 60.f, .y = 75.f, .z = 0.f};
   p->position.x = 600.f;
   p->position.y = 65.f;
-
-  for(int x = 0; x<LAST_ANIM;x++){
-   for(int y = 0;y<4;y++){
-     p->animations[x][y].id = 0;
-     p->animations[x][y].width = 0;
-     p->animations[x][y].heidth = 0;
-   }
-  }
 
   vector half_size = {.x = p->size.x / 2.f, .y = p->size.y / 2.f};
   vector min = {.x = p->position.x - half_size.x,
@@ -185,16 +187,64 @@ void handlePlayerMovement(Player *player) {
 
   if (player->action[UP] && player->onGround) {
     player->jump = true;
+    player->state = JUMP;
     player->onGround = false;
   }
   if (!player->action[LEFT] && !player->action[RIGHT]) {
     player->velocity.x *= .4f;
     if (fabs(player->velocity.x) < 5.01)
       player->velocity.x = 0.f;
+    if (player->state != JUMP)
+      player->state = IDLE;
   }
 
   player->velocity.x =
       clamp(player->velocity.x, -player->maxSpeedX, player->maxSpeedX);
+}
+
+void load_animation(struct Player *player, int frames, State anim_type,
+                    char *path, unsigned int shader_id) {
+
+  if (frames > 1) {
+    player->animations[anim_type].textures =
+        (Texture *)malloc(sizeof(Texture) * frames);
+    player->animations[anim_type].frames = frames;
+    char *temp = (char *)malloc(strlen(path) + 7);
+    strcpy(temp, path);
+    strcat(temp, "-0.png");
+    int len = strlen(temp);
+    for (int x = 0; x < frames; x++) {
+      temp[len - 5] = 48 + (x + 1);
+      generate_texture(temp, &(player->animations[anim_type].textures[x]),
+                       shader_id);
+      printf("Generated texture with id: %d with frames %d \n",
+             player->animations[anim_type].textures[x].id, frames);
+    }
+    free(temp);
+
+  } else {
+    player->animations[anim_type].textures = malloc(sizeof(Texture));
+    player->animations[anim_type].frames = frames;
+    Texture *tex = &(player->animations[anim_type].textures[0]);
+    generate_texture(path, tex, shader_id);
+    printf("Generated texture with id: %d with frames %d \n",
+           player->animations[anim_type].textures[0].id, frames);
+  }
+}
+
+void load_player_animations(struct Player *player, unsigned int shader_id) {
+  load_animation(player, 1, FALL, "textures/jump fall/frame.png", shader_id);
+  load_animation(player, 4, RUN, "textures/run/frame", shader_id);
+  load_animation(player, 2, IDLE, "textures/idle/frame", shader_id);
+
+  load_animation(player, 1, JUMP, "textures/jump up/frame.png", shader_id);
+}
+
+void handle_anim_frames(Animation *anim) {
+  (anim->current_frame)++;
+  if (anim->current_frame > anim->frames-1) {
+    anim->current_frame = 0;
+  }
 }
 
 #endif

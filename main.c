@@ -12,6 +12,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "structs/animation.h"
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -54,27 +55,20 @@ int main(void) {
   Shader shader = createShader(filePath);
   char textFilePath[25] = "shaders/texture/";
   Shader text_shader = createShader(textFilePath);
-  char *pic_path[4] = {"textures/run/frame-1.png", "textures/run/frame-2.png",
-                       "textures/run/frame-3.png", "textures/run/frame-4.png"};
-;  
-// load vbo
+
+  // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
 
-  unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0, texture;
+  unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0;
   // load square vertices
   configVertices(&VBO, &VAO, &EBO);
 
   // load texture vertices
   config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, text_shader.id);
 
-
-
-
   // create player
   player = createPlayer();
-
-load_animation(player,1,FALL,"textures/jump fall/frame.png",text_shader.id);
-load_animation(player,4,RUN,"textures/run/frame",text_shader.id);
+  load_player_animations(player, text_shader.id);
   // create tile
   Level *lvl = load_leve1(text_shader.id);
 
@@ -100,8 +94,8 @@ load_animation(player,4,RUN,"textures/run/frame",text_shader.id);
 
     if (time - lastTime >= .6)
       frame++;
-    
-      // fps update every 1 second
+
+    // fps update every 1 second
     update_time(&time, &lastTime, debug, &fps);
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -126,15 +120,16 @@ load_animation(player,4,RUN,"textures/run/frame",text_shader.id);
     set_matrix_uniform(player->translation, text_shader.id, "translation");
     set_matrix_uniform(orthographic, text_shader.id, "projection");
     move_camera(player, camera, text_shader.id, lvl, dt);
-    Texture texture = player->animations[player->state][frame];
+    
+    Animation* animation =   &(player->animations[player->state]);
+    Texture texture = animation->textures[animation->current_frame];
     draw_texture(texture.id, VAO_T, text_shader.id);
+    printf("texture ID:%d with state:%s \n",texture.id,print_state(player->state));
 
+    handle_anim_frames(animation);
     move_camera(player, camera, shader.id, lvl, dt);
     glfwSwapBuffers(window);
     glfwPollEvents();
-
-    // if (frame > 4)
-    //   frame = 0;
 
     dt = time - lastFrame;
     if (dt < 0.01 || dt > 0.02) {
