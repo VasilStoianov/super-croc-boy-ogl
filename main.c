@@ -7,12 +7,12 @@
 #include "math/physic.h"
 #include "shaders/shader.h"
 #include "stdbool.h"
+#include "structs/animation.h"
 #include "structs/player.h"
 #include "vertices/vertices.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "structs/animation.h"
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -84,7 +84,7 @@ int main(void) {
   Camera *camera = create_camera();
   set_camera(camera, shader.id);
   set_camera(camera, text_shader.id);
-
+ 
   int frame = 0;
 
   while (!glfwWindowShouldClose(window)) {
@@ -98,9 +98,14 @@ int main(void) {
     // fps update every 1 second
     update_time(&time, &lastTime, debug, &fps);
     processInput(window);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    for (int x = 0; x < lvl->background_count; x++) {
+
+      set_matrix_uniform(lvl->background[x]->translate, text_shader.id,
+                         "translation");
+      draw_texture(lvl->background[x]->texture.id, VAO_T, text_shader.id);
+    }
     // update player
     glUseProgram(shader.id);
     applyGravity(player, dt);
@@ -120,11 +125,10 @@ int main(void) {
     set_matrix_uniform(player->translation, text_shader.id, "translation");
     set_matrix_uniform(orthographic, text_shader.id, "projection");
     move_camera(player, camera, text_shader.id, lvl, dt);
-    
-    Animation* animation =   &(player->animations[player->state]);
+
+    Animation *animation = &(player->animations[player->state]);
     Texture texture = animation->textures[animation->current_frame];
     draw_texture(texture.id, VAO_T, text_shader.id);
-    printf("texture ID:%d with state:%s \n",texture.id,print_state(player->state));
 
     handle_anim_frames(animation);
     move_camera(player, camera, shader.id, lvl, dt);
