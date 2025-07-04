@@ -29,7 +29,9 @@ typedef struct {
   Tile **tiles;
   int tiles_count;
   vector size;
-  Tile *background[6];
+  Tile *background[7];
+  Tile *layer1[7];
+  Tile *layer2[7];
   short background_count;
 } Level;
 
@@ -39,7 +41,7 @@ Level *load_leve1(unsigned int shader_id) {
   int index = 0;
   int row = 0;
   int line = 0;
-  level1->background_count = 6;
+  level1->background_count = 7;
   level1->tiles_count = 0;
   Tile **tiles = (Tile **)malloc(350 * (sizeof(Tile *)));
   Texture wood;
@@ -79,17 +81,29 @@ Level *load_leve1(unsigned int shader_id) {
   }
 
  Texture background;
-  generate_texture("textures/backgroud.png", &background, shader_id);
- for(int c = 0; c<6;c++){
+  generate_texture("textures/back/3.png", &background, shader_id);
+  Texture lay1;
+  generate_texture("textures/back/1.png", &lay1, shader_id);
+  Texture lay2;
+  generate_texture("textures/back/2.png", &lay2, shader_id);
+ 
+  for(int c = 0; c<level1->background_count;c++){
     
-   level1->background[c] = create_tile_with_pos_and_scale((vector){.x=(c*background.width),.y = 300.f},
+   level1->background[c] = create_tile_with_pos_and_scale((vector){.x=(c*background.width),.y = 385.f},
   (vector){.x = background.width,.y = background.heidth},"",shader_id);
   level1->background[c]->texture = background;  
+ 
+  level1->layer1[c] = create_tile_with_pos_and_scale((vector){.x=(c*lay1.width),.y = 170.f},
+  (vector){.x = lay1.width,.y = lay1.heidth},"",shader_id);
+  level1->layer1[c]->texture = lay1;  
 
- }
+  level1->layer2[c] = create_tile_with_pos_and_scale((vector){.x=(c*lay2.width),.y = 300.f},
+  (vector){.x = lay2.width,.y = lay2.heidth},"",shader_id);
+  level1->layer2[c]->texture = lay2;  
+
+}
 
   level1->size = (vector){.x = line * 48.f, .y = row * 48.f};
-
   level1->tiles_count = counter;
   level1->tiles = tiles;
   return level1;

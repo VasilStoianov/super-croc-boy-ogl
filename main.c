@@ -84,7 +84,7 @@ int main(void) {
   Camera *camera = create_camera();
   set_camera(camera, shader.id);
   set_camera(camera, text_shader.id);
- 
+
   int frame = 0;
 
   while (!glfwWindowShouldClose(window)) {
@@ -102,10 +102,27 @@ int main(void) {
 
     for (int x = 0; x < lvl->background_count; x++) {
 
+      set_matrix_uniform(lvl->layer1[x]->translate, text_shader.id,
+                         "translation");
+      draw_texture(lvl->layer1[x]->texture.id, VAO_T, text_shader.id);
+    }
+ 
+     for (int x = 0; x < lvl->background_count; x++) {
+
+      set_matrix_uniform(lvl->layer2[x]->translate, text_shader.id,
+                         "translation");
+      draw_texture(lvl->layer2[x]->texture.id, VAO_T, text_shader.id);
+    }
+
+
+ 
+    for (int x = 0; x < lvl->background_count; x++) {
+
       set_matrix_uniform(lvl->background[x]->translate, text_shader.id,
                          "translation");
       draw_texture(lvl->background[x]->texture.id, VAO_T, text_shader.id);
     }
+
     // update player
     glUseProgram(shader.id);
     applyGravity(player, dt);
