@@ -66,7 +66,7 @@ void config_texture_vertices(unsigned int *VBO, unsigned int *VAO,
 }
 
 void config_circle_vertices(unsigned int *VBO, unsigned int *VAO,
-                             int shader_id,float* vertices,int circle_count) {
+                             float* vertices,int circle_count) {
 
   glGenVertexArrays(1, VAO);
   glGenBuffers(1, VBO);

@@ -30,9 +30,9 @@ char *readFile(FILE *f) {
 }
 
 Shader createShader(char *filePath) {
-  char *fullPathFs = malloc(strlen(filePath) + strlen("fragment.fs"));
+  char *fullPathFs = malloc(strlen(filePath) + strlen("fragment.fs")+1);
   fullPathFs[0] = '\0';
-  char *fullPathVs = malloc(strlen(filePath) + strlen("vertex.vs"));
+  char *fullPathVs = malloc(strlen(filePath) + strlen("vertex.vs") +1);
   fullPathVs[0] = '\0';
   strcat(fullPathFs, filePath);
   strcat(fullPathFs, "fragment.fs");

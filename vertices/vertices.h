@@ -32,12 +32,12 @@ float* circle_vertices(int cx,int cy,int radius,int segments,int* out_count){
   vertices[0] = cx;
   vertices[1] = cy;
 
-  for(int x = 0; x<=segments;++x){
-      float angle = (2.f * M_PI + x) /segments;
+  for(int i = 0; i<=segments;++i){
+      float angle = (2.f * M_PI * (float)i) /(float)segments;
       float x = cx + cosf(angle) *radius;
-      float y = cy * sinf(angle) * radius;
-      int x_index = 2 + x*2;
-      int y_index = 2+x*2+1;
+      float y = cy + sinf(angle) * radius;
+      int x_index = 2 + i*2;
+      int y_index = 2+i*2+1;
       vertices[x_index] = x;
       vertices[y_index] = y;
   }
