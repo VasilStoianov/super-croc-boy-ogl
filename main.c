@@ -56,16 +56,30 @@ int main(void) {
   char textFilePath[25] = "shaders/texture/";
   Shader text_shader = createShader(textFilePath);
 
+  char circle_Path[25] = "shaders/circle/";
+  Shader circle = createShader(circle_Path);
+
+
   // load vbo
   unsigned int VBO = 0, VAO = 0, EBO = 0;
 
   unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0;
+  
+  unsigned int VBO_C= 0,VAO_C = 0;
+  
   // load square vertices
   configVertices(&VBO, &VAO, &EBO);
 
   // load texture vertices
   config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, text_shader.id);
-
+int out_count = 0;
+  float* vert = circle_vertices(0.5f,0.5f,24,6,&out_count);
+ 
+  config_circle_vertices(&VBO_C,&VAO_C,circle.id,vert,out_count);
+  mat4f circle_pos = identity();
+   setTranslation(&circle_pos,(vector){.x = 150.f,.y = 150.f});
+  scaleMatrix(&circle_pos,(vector){.x = 64.f,.y = 64.f});
+  free(vert);
   // create player
   player = createPlayer();
   load_player_animations(player, text_shader.id);
@@ -80,10 +94,18 @@ int main(void) {
   //   left,width,top, heidht, near,far)
 
   mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
+ 
+    set_matrix_uniform(orthographic, circle.id, "projection");
+  set_matrix_uniform(circle_pos,circle.id,"translation");
+   set_vec3_uniform(COLOR_WHITE,circle.id,"inColor");
+ 
   // render loop
+ 
+
   Camera *camera = create_camera();
   set_camera(camera, shader.id);
   set_camera(camera, text_shader.id);
+  set_camera(camera,circle.id);
 
   int frame = 0;
 
@@ -149,6 +171,12 @@ int main(void) {
 
     handle_anim_frames(animation);
     move_camera(player, camera, shader.id, lvl, dt);
+    set_matrix_uniform(circle_pos,circle.id,"translation");
+    set_matrix_uniform(orthographic,circle.id,"projection");
+   set_vec3_uniform(COLOR_WHITE,circle.id,"inColor");
+    move_camera(player,camera,circle.id,lvl,dt);
+
+draw_circle(VAO_C,out_count,circle.id);
     glfwSwapBuffers(window);
     glfwPollEvents();
 

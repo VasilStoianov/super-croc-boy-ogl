@@ -65,10 +65,38 @@ void config_texture_vertices(unsigned int *VBO, unsigned int *VAO,
   // safely unbind
 }
 
+void config_circle_vertices(unsigned int *VBO, unsigned int *VAO,
+                             int shader_id,float* vertices,int circle_count) {
+
+  glGenVertexArrays(1, VAO);
+  glGenBuffers(1, VBO);
+  // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
+  // then configure vertex attributes(s).
+  glBindVertexArray(*VAO);
+
+  glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * circle_count, vertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+ 
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+  // safely unbind
+}
+
 void draw_square(unsigned int VAO, unsigned int program_id) {
   glUseProgram(program_id);
   glBindVertexArray(VAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void draw_circle(unsigned int VAO, int count,unsigned int program_id) {
+  glUseProgram(program_id);
+  glBindVertexArray(VAO);
+  glDrawArrays(GL_TRIANGLE_FAN,0, count);
+glBindVertexArray(0);
 }
 
 void draw_texture(unsigned int texture,unsigned int VAO, unsigned int program_id) {

@@ -1,5 +1,6 @@
 #ifndef __vertices__
 #define __vertices__
+#include "math.h"
 const float vertices[] = {
   -0.5f, -0.5f, 0.0f,
    0.5f, -0.5f, 0.0f,
@@ -23,5 +24,26 @@ const unsigned int indices2[] = {
     0, 1, 2,   // first triangle
     2, 3, 0    // second triangle
 }; 
+
+float* circle_vertices(int cx,int cy,int radius,int segments,int* out_count){
+  int count = segments + 2;
+  float* vertices = malloc(sizeof(float) * 2 * count);
+
+  vertices[0] = cx;
+  vertices[1] = cy;
+
+  for(int x = 0; x<=segments;++x){
+      float angle = (2.f * M_PI + x) /segments;
+      float x = cx + cosf(angle) *radius;
+      float y = cy * sinf(angle) * radius;
+      int x_index = 2 + x*2;
+      int y_index = 2+x*2+1;
+      vertices[x_index] = x;
+      vertices[y_index] = y;
+  }
+
+  *out_count = count;
+  return vertices;
+}
 
 #endif
