@@ -13,81 +13,25 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+#define WIDTH  800
+#define HEIGHT  600
+
 void processInput(GLFWwindow *window);
 
-const unsigned int WIDTH = 800;
-const unsigned int HEIGHT = 600;
+
 float cameraX = 1.f;
 bool shakeThecamera = false;
 Player *player = {0};
 int main(void) {
 
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-  GLFWwindow *window =
-      glfwCreateWindow(WIDTH, HEIGHT, "Super croc boy OPENGL", NULL, NULL);
 
-  if (window == NULL) {
-    printf("No window\n");
-    glfwTerminate();
-    return -1;
-  }
-
-  input_init(window);
-
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    fprintf(stderr, "Failed to initialize GLAD\n");
-    return -1;
-  }
-
-  // load shader
-  char filePath[10] = "shaders/";
-  Shader shader = createShader(filePath);
-  char textFilePath[25] = "shaders/texture/";
-  Shader text_shader = createShader(textFilePath);
-
-  char circle_Path[25] = "shaders/circle/";
-  Shader circle = createShader(circle_Path);
-
-  printf("[INFO] shaders loaded\n");
-  // load vbo
-  unsigned int VBO = 0, VAO = 0, EBO = 0;
-
-  unsigned int VBO_T = 0, VAO_T = 0, EBO_T = 0;
-
-  unsigned int VBO_C = 0, VAO_C = 0;
-
-  // load square vertices
-  configVertices(&VBO, &VAO, &EBO);
-
-  // load texture vertices
-  config_texture_vertices(&VBO_T, &VAO_T, &EBO_T, text_shader.id);
-  int out_count = 0;
-  float *vert = circle_vertices(0.f, 0.f, 1.f, 32, &out_count);
-
-for (int i = 0; i < out_count; ++i) {
-    float x = vert[i * 2];
-    float y = vert[i * 2 + 1];
-    printf("Vertex %d: (%f, %f)\n", i, x, y);
-}
-
-  config_circle_vertices(&VBO_C, &VAO_C, vert, out_count);
-  mat4f circle_pos = identity();
-  setTranslation(&circle_pos, (vector){.x = 350.f, .y = 450.f});
-  scaleMatrix(&circle_pos, (vector){.x = 50.f, .y = 50.f});
+  GLFWwindow *window = init( WIDTH, HEIGHT, "Super croc boy OPENGL");
+  
   // create player
   player = createPlayer();
-  load_player_animations(player, text_shader.id);
+
+  load_player_animations(player);
   // create tile
   Level *lvl = load_leve1(text_shader.id);
 
@@ -97,20 +41,11 @@ for (int i = 0; i < out_count; ++i) {
   int fps = 0;
   bool debug = false;
   //   left,width,top, heidht, near,far)
-
-  mat4f orthographic = ortho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
-
-  set_matrix_uniform(orthographic, circle.id, "projection");
-  set_matrix_uniform(circle_pos, circle.id, "translation");
-  set_vec3_uniform(COLOR_WHITE, circle.id, "inColor");
-
   // render loop
 
   Camera *camera = create_camera();
-  set_camera(camera, shader.id);
-  set_camera(camera, text_shader.id);
-  set_camera(camera, circle.id);
-
+  Circle* circle = create_circle(24,(vector){.x = 250.f,.y = 250.f},(vector){48.f,48.f},COLOR_WHITE);
+  set_camera(camera);
   int frame = 0;
 glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -130,57 +65,40 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      set_matrix_uniform(lvl->layer1[x]->translate, text_shader.id,
-                         "translation");
-      draw_texture(lvl->layer1[x]->texture.id, VAO_T, text_shader.id);
+      draw_texture_matrix_id(lvl->layer1[x]->translate, lvl->layer1[x]->texture.id);
     }
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      set_matrix_uniform(lvl->layer2[x]->translate, text_shader.id,
-                         "translation");
-      draw_texture(lvl->layer2[x]->texture.id, VAO_T, text_shader.id);
+      draw_texture_matrix_id(lvl->layer2[x]->translate,lvl->layer2[x]->texture.id);
     }
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      set_matrix_uniform(lvl->background[x]->translate, text_shader.id,
-                         "translation");
-      draw_texture(lvl->background[x]->texture.id, VAO_T, text_shader.id);
+      draw_texture_matrix_id(lvl->background[x]->translate,lvl->background[x]->texture.id);
     }
 
     // update player
-    glUseProgram(shader.id);
     applyGravity(player, dt);
-    updatePlayer(player, shader.id, dt);
+    updatePlayer(player, dt);
 
     scalePlayer(player);
 
     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
-    set_matrix_uniform(orthographic, shader.id, "projection");
 
     for (int x = 0; x < lvl->tiles_count; x++) {
       Tile *tile = lvl->tiles[x];
-      set_matrix_uniform(tile->translate, text_shader.id, "translation");
-      draw_texture(tile->texture.id, VAO_T, text_shader.id);
+      draw_texture(&(tile->texture));
     }
-
-    set_matrix_uniform(player->translation, text_shader.id, "translation");
-    set_matrix_uniform(orthographic, text_shader.id, "projection");
-    move_camera(player, camera, text_shader.id, lvl, dt);
 
     Animation *animation = &(player->animations[player->state]);
     Texture texture = animation->textures[animation->current_frame];
-    draw_texture(texture.id, VAO_T, text_shader.id);
-
+    draw_texture_matrix_id(player->translation,texture.id);
     handle_anim_frames(animation);
-    move_camera(player, camera, shader.id, lvl, dt);
-    set_matrix_uniform(circle_pos, circle.id, "translation");
-    set_matrix_uniform(orthographic, circle.id, "projection");
-    set_vec3_uniform(COLOR_WHITE, circle.id, "inColor");
-    move_camera(player, camera, circle.id, lvl, dt);
 
-    draw_circle(VAO_C, out_count, circle.id);
+
+    move_camera( camera,player->size,player->position,lvl->size,dt);
+    draw_circle(circle);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -197,9 +115,7 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   return 1;
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-}
+
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {

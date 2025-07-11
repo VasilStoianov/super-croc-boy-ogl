@@ -1,6 +1,7 @@
 #ifndef __LEVELS__
 #define __LEVELS__
 #include "tile.h"
+#include "../game.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,7 @@ typedef struct {
   short background_count;
 } Level;
 
-Level *load_leve1(unsigned int shader_id) {
+Level *load_leve1() {
   Level *level1 = (Level *)malloc(sizeof(Level));
   int counter = 0;
   int index = 0;
@@ -48,8 +49,8 @@ Level *load_leve1(unsigned int shader_id) {
   Texture grass;
   char path[25] = "textures/grass.png";
   char pat2[25] = "textures/wood.png";
-  generate_texture(path, &grass, shader_id);
-  generate_texture(pat2, &wood, shader_id);
+  generate_texture(path, &grass);
+  generate_texture(pat2, &wood);
   while (lvl1[row] != NULL) {
     while (lvl1[row][index] != '\0') {
       if (lvl1[row][index] == '#') {
@@ -57,8 +58,9 @@ Level *load_leve1(unsigned int shader_id) {
         vector size = {.x = 48.f, .y = 48.f};
         vector position = {.x = 48.f * index, .y = 48.f * row};
 
-        tile = create_tile_with_pos_and_scale(position, size, path, shader_id);
+        tile = create_tile_with_pos_and_scale(position, size);
         tile->texture = grass;
+        tile->texture.translation = tile->translate;
         tiles[counter++] = tile;
       }
 
@@ -67,9 +69,10 @@ Level *load_leve1(unsigned int shader_id) {
         vector size = {.x = 48.f, .y = 48.f};
         vector position = {.x = 48.f * index, .y = 48.f * row};
 
-        tile = create_tile_with_pos_and_scale(position, size,
-                                              "textures/wood.png", shader_id);
+        tile = create_tile_with_pos_and_scale(position, size);
         tile->texture = wood;
+
+        tile->texture.translation = tile->translate;
         tiles[counter++] = tile;
       }
 
@@ -81,24 +84,24 @@ Level *load_leve1(unsigned int shader_id) {
   }
 
  Texture background;
-  generate_texture("textures/back/3.png", &background, shader_id);
+  generate_texture("textures/back/3.png", &background);
   Texture lay1;
-  generate_texture("textures/back/1.png", &lay1, shader_id);
+  generate_texture("textures/back/1.png", &lay1);
   Texture lay2;
-  generate_texture("textures/back/2.png", &lay2, shader_id);
+  generate_texture("textures/back/2.png", &lay2);
  
   for(int c = 0; c<level1->background_count;c++){
     
    level1->background[c] = create_tile_with_pos_and_scale((vector){.x=(c*background.width),.y = 385.f},
-  (vector){.x = background.width,.y = background.heidth},"",shader_id);
+  (vector){.x = background.width,.y = background.heidth});
   level1->background[c]->texture = background;  
  
   level1->layer1[c] = create_tile_with_pos_and_scale((vector){.x=(c*lay1.width),.y = 170.f},
-  (vector){.x = lay1.width,.y = lay1.heidth},"",shader_id);
+  (vector){.x = lay1.width,.y = lay1.heidth});
   level1->layer1[c]->texture = lay1;  
 
   level1->layer2[c] = create_tile_with_pos_and_scale((vector){.x=(c*lay2.width),.y = 300.f},
-  (vector){.x = lay2.width,.y = lay2.heidth},"",shader_id);
+  (vector){.x = lay2.width,.y = lay2.heidth});
   level1->layer2[c]->texture = lay2;  
 
 }

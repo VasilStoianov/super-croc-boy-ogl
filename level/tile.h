@@ -36,7 +36,7 @@ void set_tile_translation(mat4f *tile_matrix, vector position) {
   setTranslation(tile_matrix, position);
 }
 
-Tile *create_tile_with_pos_and_scale(vector position, vector size,char* path, unsigned int shader_id) {
+Tile *create_tile_with_pos_and_scale(vector position, vector size) {
   Tile *tile = (Tile *)malloc(sizeof(Tile));
   tile->translate = identity();
   tile->size = size;
