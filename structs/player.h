@@ -105,6 +105,13 @@ Player *createPlayer() {
   return p;
 }
 
+
+void scalePlayer(Player *player) {
+
+  scaleMatrix(&(player->translation), player->scale);
+}
+
+
 void updatePlayer(Player *player, float dt) {
   if (player->jump) {
     player->velocity.y -= 70.f;
@@ -137,11 +144,7 @@ void updatePlayer(Player *player, float dt) {
   set_aabb(&(player->aabb), min, max);
 
   setTranslation(&(player->translation), player->position);
-}
-
-void scalePlayer(Player *player) {
-
-  scaleMatrix(&(player->translation), player->scale);
+    scalePlayer(player);
 }
 void set_player_action(Player *player) {
 

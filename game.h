@@ -132,8 +132,8 @@ void draw_circle(Circle *circle) {
   glUseProgram(circle_shader.id);
   set_matrices_uniform(circle->translation, circle_shader.id);
   set_vec3_uniform(circle->color, circle_shader.id, "inColor");
+glBindVertexArray(VAO_C);
   glDrawArrays(GL_TRIANGLE_FAN, 0, circle_verts);
-  glBindVertexArray(0);
 }
 
 void draw_texture_matrix_id(mat4f translation, unsigned int text_id) {
@@ -186,7 +186,7 @@ void generate_texture(char *image_path, Texture *texture) {
 void update_time(double *time, double *lastTime, bool debug, int *fps) {
   if (time - lastTime >= 1.0) {
     if (debug) {
-      printf("FPS %d\n", fps);
+      printf("FPS %f\n", *fps);
     }
     fps = 0;
     lastTime = time;

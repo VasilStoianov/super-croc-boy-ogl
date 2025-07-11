@@ -229,20 +229,6 @@ void check_collision_gjk(Player *player, Tile **tiles, int tiles_count) {
 
   for (int x = 0; x < tiles_count; x++) {
     Tile *tile = tiles[x];
-    // vector tile_min = get_min(tile->vertices);
-    // vector tile_max = get_max(tile->vertices);
-    // if (!aabb_overlap(player_min, player_max, tile_min, tile_max))
-    //   continue;
-
-    // printf("\nTile #%d\n", x);
-    // for (int i = 0; i < 4; i++) {
-    //   printf("  TILE vertex %d: (%f, %f)\n", i, tile->vertices[i].x,
-    //          tile->vertices[i].y);
-    // }
-    // for (int i = 0; i < 4; i++) {
-    //   printf("  PLAYER vertex %d: (%f, %f)\n", i, player->vertices[i].x,
-    //          player->vertices[i].y);
-    // }
 
     Convex *convex = malloc(sizeof(Convex));
     create_stack(&convex->points);
@@ -431,6 +417,29 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
 
     // 6) Update grounded state
     p->onGround = grounded;
+}
+
+void circle_rect_collision(vector circle_position,vector rect_position,vector rect_size, int radius){
+
+  float rect_left = rect_position.x - rect_size.x/2.f;
+  float rect_right = rect_position.x + rect_size.x /2.f;
+  float rect_top = rect_position.y - rect_size.y / 2.f;
+  float rect_bot = rect_position.y + rect_size.y / 2.f;
+
+  float closestX = clamp((float)radius,rect_left,rect_right);
+  float closestY = clamp((float) radius,rect_top,rect_bot);
+
+  float dx = circle_position.x  - closestX;
+  float dy = circle_position.y - closestY;
+
+  float dist_sq = dx * dx + dy*dy;
+
+  if(dist_sq < radius * radius){
+    printf("Circle rect collision\n");
+  }
+   
+
+
 }
 
 #endif

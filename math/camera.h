@@ -69,7 +69,7 @@ void move_camera(Camera* camera,vector player_size,vector player_position, vecto
 
   if (camPlayerLine > 600.f &&
       (camera->position.x * -1.f) + 800.f < level_size.x) {
-    camera->position.x -= 850.f * deltaTime;
+    camera->position.x -= 950.f * deltaTime;
   } else if (camPlayerLine < 200.f && camera->position.x * -1.f > 0) {
     camera->position.x += 850.f * deltaTime;
   }

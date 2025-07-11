@@ -13,21 +13,21 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define WIDTH  800
-#define HEIGHT  600
+#define WIDTH 800
+#define HEIGHT 600
 
 void processInput(GLFWwindow *window);
-
 
 float cameraX = 1.f;
 bool shakeThecamera = false;
 Player *player = {0};
+
+  bool debug = false;
+
 int main(void) {
 
+  GLFWwindow *window = init(WIDTH, HEIGHT, "Super croc boy OPENGL");
 
-
-  GLFWwindow *window = init( WIDTH, HEIGHT, "Super croc boy OPENGL");
-  
   // create player
   player = createPlayer();
 
@@ -39,16 +39,15 @@ int main(void) {
   double lastFrame = 0;
   double lastTime = time;
   int fps = 0;
-  bool debug = false;
-  //   left,width,top, heidht, near,far)
-  // render loop
 
   Camera *camera = create_camera();
-  Circle* circle = create_circle(24,(vector){.x = 250.f,.y = 250.f},(vector){48.f,48.f},COLOR_WHITE);
+  Circle *circle = create_circle(32, (vector){.x = 400.f, .y = 400.f},COLOR_RED);
   set_camera(camera);
+
   int frame = 0;
-glEnable(GL_BLEND);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   while (!glfwWindowShouldClose(window)) {
     camera->startShaking = shakeThecamera;
@@ -65,24 +64,25 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      draw_texture_matrix_id(lvl->layer1[x]->translate, lvl->layer1[x]->texture.id);
+      draw_texture_matrix_id(lvl->layer1[x]->translate,
+                             lvl->layer1[x]->texture.id);
     }
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      draw_texture_matrix_id(lvl->layer2[x]->translate,lvl->layer2[x]->texture.id);
+      draw_texture_matrix_id(lvl->layer2[x]->translate,
+                             lvl->layer2[x]->texture.id);
     }
 
     for (int x = 0; x < lvl->background_count; x++) {
 
-      draw_texture_matrix_id(lvl->background[x]->translate,lvl->background[x]->texture.id);
+      draw_texture_matrix_id(lvl->background[x]->translate,
+                             lvl->background[x]->texture.id);
     }
 
     // update player
     applyGravity(player, dt);
     updatePlayer(player, dt);
-
-    scalePlayer(player);
 
     player_ground_collision(player, lvl->tiles, lvl->tiles_count, dt);
 
@@ -93,12 +93,12 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Animation *animation = &(player->animations[player->state]);
     Texture texture = animation->textures[animation->current_frame];
-    draw_texture_matrix_id(player->translation,texture.id);
+    draw_texture_matrix_id(player->translation, texture.id);
     handle_anim_frames(animation);
 
-
-    move_camera( camera,player->size,player->position,lvl->size,dt);
+    move_camera(camera, player->size, player->position, lvl->size, dt);
     draw_circle(circle);
+     circle_rect_collision(circle->position,player->position,player->size,circle->radius);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
@@ -110,12 +110,11 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   }
 
   free(player);
+  free(circle);
   free_leve(lvl);
   glfwTerminate();
   return 1;
 }
-
-
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -123,6 +122,9 @@ void processInput(GLFWwindow *window) {
   }
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
     shakeThecamera = !shakeThecamera;
+  }
+  if (glfwGetKey(window,GLFW_KEY_D) == GLFW_PRESS){
+    debug = !debug;
   }
   input_update();
   set_player_action(player);

@@ -1,6 +1,7 @@
 #ifndef __vertices__
 #define __vertices__
 #include "math.h"
+#include <math.h>
 const float vertices[] = {
   -0.5f, -0.5f, 0.0f,
    0.5f, -0.5f, 0.0f,
