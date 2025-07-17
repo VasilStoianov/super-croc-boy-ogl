@@ -407,6 +407,7 @@ void player_ground_collision(Player *p, Tile **tiles, int tileCount, float dt) {
                 p->position.y -= overlapY;
                 p->velocity.y = 0;
                 grounded = true;
+                p->state = IDLE;
             } else if (p->velocity.y < 0) {
                 // hitting ceiling
                 p->position.y += overlapY;

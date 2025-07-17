@@ -47,4 +47,29 @@ float* circle_vertices(int cx,int cy,int radius,int segments,int* out_count){
   return vertices;
 }
 
+
+float* circle_vertices_texture(int radius,int segments,int* out_count){
+  int count = segments + 2;
+  float* vertices = malloc(sizeof(float) * 4 * count);
+
+  vertices[0] =0.0f;
+  vertices[1] = 0.0f;
+  vertices[2] = 0.5f;
+  vertices[3] = 0.5f;
+
+  for(int i = 0; i<=segments;++i){
+      float angle = (2.f * M_PI * (float)i) /(float)segments;
+      float x =  cosf(angle) *radius;
+      float y = sinf(angle) * radius;
+      int x_index = (i + 1) * 4;
+      vertices[0 + x_index] = x;
+      vertices[1 + x_index] = y;
+      vertices[2 + x_index] = 0.5f + x / (2.0f * radius);
+      vertices[3 + x_index] = 0.5f + y / (2.0f * radius);
+  }
+
+  *out_count = count;
+  return vertices;
+}
+
 #endif

@@ -87,5 +87,12 @@ mat4f ortho_top_left(float width, float height)
     return M;
 }
 
+void set_x_rotation(float angle,mat4f* matrix){
+  matrix->m[0][0] = cosf(angle);
+  matrix->m[0][1] = sinf(angle);
+  matrix->m[1][0] = -sinf(angle);
+  matrix->m[1][1] = cosf(angle);
+}
+
 
 #endif

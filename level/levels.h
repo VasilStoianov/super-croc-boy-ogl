@@ -2,7 +2,7 @@
 #define __LEVELS__
 #include "tile.h"
 #include "../game.h"
-
+#include "round_tile.h"
 #include <stdio.h>
 #include <stdlib.h>
 #define LEVEL_W 34
@@ -17,7 +17,7 @@ char *lvl1[] = {
     "1                                                                           1",
     "1                               ####                                        1",
     "1                   ####                     ####                           1",
-    "1                                           ##  ##                          1",
+    "1                             0             ##  ##                          1",
     "1                                                                           1",
     "1                                                                           1",
     "1                                       1                    1              1",
@@ -31,6 +31,7 @@ typedef struct {
   int tiles_count;
   vector size;
   Tile *background[7];
+  Round_Spike* rs;
   Tile *layer1[7];
   Tile *layer2[7];
   short background_count;
@@ -47,13 +48,20 @@ Level *load_leve1() {
   Tile **tiles = (Tile **)malloc(350 * (sizeof(Tile *)));
   Texture wood;
   Texture grass;
+  Texture chainsaw;
   char path[25] = "textures/grass.png";
   char pat2[25] = "textures/wood.png";
+  char path3[25] = "textures/chainsaw.png";
   generate_texture(path, &grass);
   generate_texture(pat2, &wood);
+  generate_texture_circle(path3,&chainsaw);
   while (lvl1[row] != NULL) {
     while (lvl1[row][index] != '\0') {
-      if (lvl1[row][index] == '#') {
+
+      switch (lvl1[row][index])
+      {
+      case '#':
+        {
         Tile *tile = (Tile *)malloc(sizeof(Tile));
         vector size = {.x = 48.f, .y = 48.f};
         vector position = {.x = 48.f * index, .y = 48.f * row};
@@ -62,9 +70,10 @@ Level *load_leve1() {
         tile->texture = grass;
         tile->texture.translation = tile->translate;
         tiles[counter++] = tile;
+        break;
       }
-
-      if (lvl1[row][index] == '1') {
+       
+      case '1':{
         Tile *tile = (Tile *)malloc(sizeof(Tile));
         vector size = {.x = 48.f, .y = 48.f};
         vector position = {.x = 48.f * index, .y = 48.f * row};
@@ -74,7 +83,23 @@ Level *load_leve1() {
 
         tile->texture.translation = tile->translate;
         tiles[counter++] = tile;
+        break;
       }
+      case '0':{
+       level1->rs = create_spike(24,(vector){.x= 48.f*index,.y = 48.f*row});
+       level1->rs->texture = chainsaw;
+       level1->rs->texture.translation = identity();
+       setTranslation(&(level1->rs->texture.translation),level1->rs->position);
+       scaleMatrix(&(level1->rs->texture.translation),(vector){.x = 48.f,.y = 48.f});
+
+        break;
+      }
+
+      default:
+        break;
+      }
+        
+
 
       index++;
     }

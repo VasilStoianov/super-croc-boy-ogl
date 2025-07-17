@@ -1,12 +1,12 @@
 #ifndef __player__
 #define __player__
+#include "../game.h"
 #include "../input.h"
 #include "../lib/glad.h"
 #include "../math/matrix.h"
 #include "../math/vector.h"
 #include "../shaders/shader.h"
 #include "../structs/aabb.h"
-#include "../game.h"
 #include "../utils.h"
 #include "animation.h"
 #include <GLFW/glfw3.h>
@@ -105,12 +105,10 @@ Player *createPlayer() {
   return p;
 }
 
-
 void scalePlayer(Player *player) {
 
   scaleMatrix(&(player->translation), player->scale);
 }
-
 
 void updatePlayer(Player *player, float dt) {
   if (player->jump) {
@@ -144,7 +142,7 @@ void updatePlayer(Player *player, float dt) {
   set_aabb(&(player->aabb), min, max);
 
   setTranslation(&(player->translation), player->position);
-    scalePlayer(player);
+  scalePlayer(player);
 }
 void set_player_action(Player *player) {
 
@@ -174,7 +172,7 @@ void handlePlayerMovement(Player *player) {
 
   if (player->action[LEFT]) {
     player->velocity.x += -50.2f;
-    player->state = RUN;
+    player->state = player->onGround ? RUN : JUMP;
     if (player->scale.x > 0.f) {
       player->scale.x *= -1.f;
     }
@@ -182,7 +180,7 @@ void handlePlayerMovement(Player *player) {
   if (player->action[RIGHT]) {
     player->velocity.x += 50.2f;
 
-    player->state = RUN;
+    player->state = player->onGround ? RUN : JUMP;
     if (player->scale.x < 0.f) {
       player->scale.x *= -1.f;
     }
@@ -193,6 +191,7 @@ void handlePlayerMovement(Player *player) {
     player->state = JUMP;
     player->onGround = false;
   }
+
   if (!player->action[LEFT] && !player->action[RIGHT]) {
     player->velocity.x *= .4f;
     if (fabs(player->velocity.x) < 5.01)
@@ -244,7 +243,7 @@ void load_player_animations(struct Player *player) {
 
 void handle_anim_frames(Animation *anim) {
   (anim->current_frame)++;
-  if (anim->current_frame > anim->frames-1) {
+  if (anim->current_frame > anim->frames - 1) {
     anim->current_frame = 0;
   }
 }
