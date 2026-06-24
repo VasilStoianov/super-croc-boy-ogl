@@ -33,7 +33,7 @@ int main(void) {
 
   load_player_animations(player);
   // create tile
-  Level *lvl = load_leve1(text_shader.id);
+  Level *lvl = load_leve1();
 
   double time = glfwGetTime();
   double lastFrame = 0;
