@@ -54,7 +54,7 @@ int main(void) {
     time = glfwGetTime();
     fps++;
 
-    if (time - lastTime >= .6)
+    if (time - lastTime >= 1.6)
       frame++;
 
     // fps update every 1 second
@@ -97,7 +97,7 @@ int main(void) {
     handle_anim_frames(animation);
 
     move_camera(camera, player->size, player->position, lvl->size, dt);
-update_angle(dt,lvl->rs);
+    update_angle(dt,lvl->rs);
     draw_circle_texture_rotation(lvl->rs->texture.translation,lvl->rs->texture.id,lvl->rs->rotation);
     draw_circle(circle);
      circle_rect_collision(circle->position,player->position,player->size,circle->radius);
