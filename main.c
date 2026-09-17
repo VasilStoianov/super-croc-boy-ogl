@@ -94,7 +94,7 @@ int main(void) {
     Animation *animation = &(player->animations[player->state]);
     Texture texture = animation->textures[animation->current_frame];
     draw_texture_matrix_id(player->translation, texture.id);
-    handle_anim_frames(animation);
+    handle_anim_frames(animation,lastTime);
 
     move_camera(camera, player->size, player->position, lvl->size, dt);
     update_angle(dt,lvl->rs);

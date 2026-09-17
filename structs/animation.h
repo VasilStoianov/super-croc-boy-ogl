@@ -4,7 +4,6 @@
 #include "stdlib.h"
 
 
-
 typedef struct {
 short frames;
 short current_frame;

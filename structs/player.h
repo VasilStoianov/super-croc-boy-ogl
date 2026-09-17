@@ -118,8 +118,8 @@ void updatePlayer(Player *player, float dt) {
     }
   }
 
-  player->position.x += player->velocity.x * dt;
-  player->position.y += player->velocity.y * dt;
+  player->position.x += player->velocity.x*dt;
+  player->position.y += player->velocity.y*dt;
   vector half_size = {.x = player->size.x / 2.f, .y = player->size.y / 2.f};
   vector min = {.x = player->position.x - half_size.x,
                 .y = player->position.y - half_size.y};
@@ -241,7 +241,8 @@ void load_player_animations(struct Player *player) {
   load_animation(player, 1, JUMP, "textures/jump up/frame.png");
 }
 
-void handle_anim_frames(Animation *anim) {
+void handle_anim_frames(Animation *anim,double last_time) {
+  if(last_time > 0.7)
   (anim->current_frame)++;
   if (anim->current_frame > anim->frames - 1) {
     anim->current_frame = 0;
